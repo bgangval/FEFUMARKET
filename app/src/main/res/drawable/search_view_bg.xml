@@ -1,0 +1,6 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#444444"/> <!-- фон поля -->
+    <corners android:radius="30dp"/> <!-- скругление -->
+    <stroke android:width="3dp" android:color="#488CDA"/> <!-- рамка, если нужно -->
+</shape>
