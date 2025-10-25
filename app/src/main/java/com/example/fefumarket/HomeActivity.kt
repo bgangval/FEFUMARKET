@@ -2,9 +2,14 @@ package com.example.fefumarket
 
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.MenuItem
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
@@ -17,70 +22,133 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adAdapter: AdAdapter
     private val originalAdList = mutableListOf<Ad>()
+    private val searchHandler = Handler(Looper.getMainLooper())
+    private val searchRunnable = Runnable { performSearch("") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        }
 
-        // RecyclerView
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
+        recyclerView.setHasFixedSize(true)
+        recyclerView.setItemViewCacheSize(20)
 
+        // Пример объявлений
         originalAdList.addAll(
             listOf(
-                Ad("Ноутбук Lenovo", "₽45,000", "Иван"),
-                Ad("Айфон 12", "₽70,000", "Мария"),
-                Ad("Кроссовки Nike", "₽9,000", "Олег"),
-                Ad("Монитор Samsung", "₽12,500", "Анна"),
-                Ad("Наушники Sony", "₽5,000", "Виктор")
+                Ad("Ноутбук Lenovo", "₽45,000", "Иван", "Новый, i7, 16GB RAM", R.drawable.laptop_ic_test),
+                Ad("Айфон 12", "₽70,000", "Мария", "В отличном состоянии, 128GB", R.drawable.iphone_ic_test),
+                Ad("Кроссовки Nike", "₽9,000", "Олег", "Размер 42, оригинал", R.drawable.nike_ic_test),
+                Ad("Монитор Samsung", "₽12,500", "Анна", "27 дюймов, 4K", R.drawable.monitor_ic_test),
+                Ad("Наушники Sony", "₽5,000", "Виктор", "Беспроводные, шумоподавление", R.drawable.sony_ic_test),
+                Ad("Велосипед Giant", "₽25,000", "Петр", "Горный, 21 скорость", R.drawable.bike_ic_test),
+                Ad("Книга по Android", "₽1,200", "Елена", "Kotlin для начинающих", R.drawable.book_ic_test),
+                Ad("Часы Casio", "₽3,500", "Дмитрий", "Кварцевые, водонепроницаемые", R.drawable.watch_ic_test)
             )
         )
-        adAdapter = AdAdapter(originalAdList.toList())
+
+        adAdapter = AdAdapter(originalAdList)
         recyclerView.adapter = adAdapter
 
-        // BottomNavigation
+        // Padding снизу для BottomNavigationView
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.setOnItemSelectedListener { item ->
+        bottomNavigation.viewTreeObserver.addOnGlobalLayoutListener {
+            recyclerView.setPadding(0, 0, 0, bottomNavigation.height)
+        }
+
+        setupBottomNavigation()
+        setupSearchView()
+    }
+
+    private fun setupBottomNavigation() {
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        bottomNavigation.setOnItemSelectedListener { item: MenuItem ->
             when (item.itemId) {
-                R.id.nav_home -> true
-                R.id.nav_cart -> true
-                R.id.nav_add -> true
-                R.id.nav_chat -> true
-                R.id.nav_profile -> true
+                R.id.nav_home -> { Toast.makeText(this, "Главная", Toast.LENGTH_SHORT).show(); true }
+                R.id.nav_cart -> { Toast.makeText(this, "Избранное", Toast.LENGTH_SHORT).show(); true }
+                R.id.nav_add -> { Toast.makeText(this, "Добавить", Toast.LENGTH_SHORT).show(); true }
+                R.id.nav_chat -> { Toast.makeText(this, "Чат", Toast.LENGTH_SHORT).show(); true }
+                R.id.nav_profile -> { Toast.makeText(this, "Профиль", Toast.LENGTH_SHORT).show(); true }
                 else -> false
             }
         }
+        bottomNavigation.selectedItemId = R.id.nav_home
 
-        // Настройка SearchView
+        val btnFilter: ImageButton = findViewById(R.id.btnFilter)
+        btnFilter.setOnClickListener {
+            Toast.makeText(this, "Фильтр (TODO: диалог)", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
         val color = ContextCompat.getColor(this, R.color.search_icon_color)
 
-        // Сразу раскрытый и готовый к вводу
-        searchView.isIconified = false
-        searchView.isFocusable = true
-        searchView.isFocusableInTouchMode = true
-        searchView.requestFocus()
-
         searchView.post {
-            // Лупа
             val searchIcon = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
-            searchIcon.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+            searchIcon?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
 
-            // Текст подсказки и вводимый текст
             val hintText = searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
-            hintText.setTextColor(color)
-            hintText.setHintTextColor(color)
-            hintText.textSize = 16f
+            hintText?.apply {
+                setTextColor(color)
+                setHintTextColor(color)
+                textSize = 16f
+            }
 
-            // Крестик очистки текста
             val closeButton = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
-            closeButton.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+            closeButton?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
 
-        // Обработка фильтра
-        val btnFilter: ImageButton = findViewById(R.id.btnFilter)
-        btnFilter.setOnClickListener {
-            // TODO: показать диалог фильтрации
+        // Разворачиваем SearchView, чтобы поле реагировало на касание
+        searchView.isIconified = false
+
+        // Обработка текста
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                performSearch(query.orEmpty())
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                searchHandler.removeCallbacks(searchRunnable)
+                searchHandler.postDelayed({ performSearch(newText.orEmpty()) }, 300)
+                return true
+            }
+        })
+    }
+
+    private fun performSearch(query: String) {
+        val filteredList = if (query.isEmpty()) {
+            originalAdList.toList()
+        } else {
+            originalAdList.filter { ad ->
+                ad.title.contains(query, ignoreCase = true) ||
+                        ad.seller.contains(query, ignoreCase = true) ||
+                        ad.price.contains(query, ignoreCase = true) ||
+                        ad.description.contains(query, ignoreCase = true)
+            }
         }
+        adAdapter.updateAds(filteredList)
+        if (filteredList.isEmpty()) {
+            Toast.makeText(this, "Нет результатов: '$query'", Toast.LENGTH_SHORT).show()
+        }
+        Log.d("HomeActivity", "Filtered: ${filteredList.size} items")
+    }
+
+    override fun onDestroy() {
+        searchHandler.removeCallbacks(searchRunnable)
+        super.onDestroy()
     }
 }
+
+data class Ad(
+    val title: String,
+    val price: String,
+    val seller: String,
+    val description: String = "",
+    val imageResId: Int // Ссылка на drawable
+)

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <!-- Основной контент с прокруткой -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:clipToPadding="false"
+        android:layout_marginBottom="120dp"> <!-- Увеличили отступ для кнопок и навигации -->
+
+        <!-- LinearLayout для вертикального расположения всех элементов внутри ScrollView -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Фото объявления -->
+            <ImageView
+                android:id="@+id/productImage"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:scaleType="centerCrop"
+                android:background="@color/light_gray"
+                android:contentDescription="Фото товара"
+                android:src="@drawable/laptop_ic_test"
+                android:layout_marginBottom="16dp"
+                android:clipToOutline="true"
+                android:outlineProvider="background" />
+
+            <!-- Название -->
+            <TextView
+                android:id="@+id/titleText"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Название объявления"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Цена -->
+            <TextView
+                android:id="@+id/priceText"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="₽45,000"
+                android:textSize="18sp"
+                android:textColor="@color/text_white"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Корпус -->
+            <TextView
+                android:id="@+id/dormText"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Корпус: "
+                android:textSize="16sp"
+                android:textColor="@color/text_white"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Описание -->
+            <TextView
+                android:layout_width="match_parent"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_height="wrap_content"
+                android:text="Описание"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/descriptionText"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Здесь будет описание товара..."
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="32dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Контейнер для фиксированных кнопок -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/bg"
+        android:padding="16dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="56dp"
+        android:elevation="8dp">
+
+    <!-- Кнопка "Написать" -->
+    <Button
+        android:id="@+id/contactButton"
+        android:fontFamily="@font/montserrat_regular"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:text="Написать"
+        android:textColor="@color/white"
+        android:background="@drawable/blue_rounded_button"
+        android:textSize="16sp" />
+
+    <!-- Кнопка "В избранное" -->
+    <Button
+        android:id="@+id/favoriteButton"
+        android:fontFamily="@font/montserrat_regular"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:text="В избранное"
+        android:textColor="@color/text_white"
+        android:background="@drawable/blue_rounded_button"
+        android:textSize="16sp" />
+
+</LinearLayout>
+
+    <!-- Нижняя навигация -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/bottom_bar_bg"
+        android:fitsSystemWindows="true"
+        android:paddingBottom="0dp"
+        android:layout_marginBottom="0dp"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
+        app:menu="@menu/bottom_nav_menu"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
+        android:elevation="8dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

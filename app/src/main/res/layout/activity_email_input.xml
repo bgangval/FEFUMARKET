@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg">
 
+    <!-- Логотип приложения -->
     <ImageView
         android:id="@+id/logo"
         android:layout_width="120dp"
@@ -17,6 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="100dp" />
 
+    <!-- Заголовок экрана -->
     <TextView
         android:id="@+id/title"
         android:fontFamily="@font/montserrat_regular"
@@ -31,6 +33,7 @@
         android:layout_marginTop="24dp"
         android:layout_marginBottom="48dp" />
 
+    <!-- Поле ввода email -->
     <EditText
         android:id="@+id/email_input"
         android:layout_width="0dp"
@@ -51,6 +54,7 @@
         app:layout_constraintTop_toBottomOf="@+id/title"
         app:layout_constraintWidth_percent="0.8" />
 
+    <!-- Кнопка отправки кода -->
     <Button
         android:id="@+id/send_code_button"
         android:layout_width="0dp"

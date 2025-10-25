@@ -6,69 +6,79 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg"
-    android:fitsSystemWindows="true"
+    android:fitsSystemWindows="false"
     tools:context=".HomeActivity">
 
     <!-- Верхняя панель с поиском и фильтром -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true"
+        android:layout_height="127dp"
         android:background="@color/bottom_bar_bg"
         android:elevation="4dp">
 
+        <!-- Панель инструментов (Toolbar) -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/bottom_bar_bg"
-            android:paddingTop="24dp"
             android:paddingStart="12dp"
+            android:paddingTop="24dp"
             android:paddingEnd="12dp"
             android:paddingBottom="12dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="0dp">
-
-                <androidx.appcompat.widget.SearchView
-                    android:id="@+id/searchView"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:iconifiedByDefault="false"
-                    android:queryHint="@string/search_hint"
-                    android:background="@drawable/search_view_bg"
-                    android:paddingHorizontal="12dp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"/>
-
-                <ImageButton
-                    android:id="@+id/btnFilter"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/round_button_bg"
-                    android:contentDescription="@string/filter"
-                    android:src="@drawable/ic_filter_list"
-                    app:tint="@color/search_icon_color" />
-
-            </LinearLayout>
-
         </androidx.appcompat.widget.Toolbar>
+
+        <!-- Контейнер для строки поиска и кнопки фильтра -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <!-- Поле поиска -->
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/searchView"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/search_view_bg"
+                android:iconifiedByDefault="false"
+                android:queryHint="@string/search_hint"
+                android:paddingHorizontal="12dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
+
+            <!-- Кнопка фильтра -->
+            <ImageButton
+                android:id="@+id/btnFilter"
+                android:fontFamily="@font/montserrat_regular"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/round_button_bg"
+                android:contentDescription="@string/filter"
+                android:src="@drawable/ic_filter_list"
+                app:tint="@color/search_icon_color" />
+
+        </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Список объявлений -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
+        android:fontFamily="@font/montserrat_regular"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:padding="4dp"
+        android:paddingBottom="72dp"
+        android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:listitem="@layout/item_ad" />
 
@@ -79,8 +89,13 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/bottom_bar_bg"
+        android:fitsSystemWindows="true"
+        android:paddingBottom="0dp"
+        android:layout_marginBottom="0dp"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_menu" />
+        app:menu="@menu/bottom_nav_menu"
+        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
+        android:elevation="8dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
