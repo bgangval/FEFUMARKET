@@ -2,10 +2,10 @@ package com.example.fefumarket
 
 import android.os.Bundle
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
 
 class AdDetailActivity : AppCompatActivity() {
 
@@ -13,7 +13,7 @@ class AdDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ad_detail)
 
-        val adImage: ImageView = findViewById(R.id.productImage)
+        val photoPager: ViewPager2 = findViewById(R.id.photoPager)
         val adTitle: TextView = findViewById(R.id.titleText)
         val adPrice: TextView = findViewById(R.id.priceText)
         val adDorm: TextView = findViewById(R.id.dormText)
@@ -27,13 +27,21 @@ class AdDetailActivity : AppCompatActivity() {
         val dorm = intent.getStringExtra("dorm")
         val price = intent.getStringExtra("price")
         val description = intent.getStringExtra("description")
-        val imageResId = intent.getIntExtra("imageResId", R.drawable.laptop_ic_test)
+
+        // Пример списка изображений (в будущем можно будет передавать динамически)
+        val photos = listOf(
+            R.drawable.laptop_ic_test,
+            R.drawable.iphone_ic_test,
+            R.drawable.sony_ic_test
+        )
+
+        // Настройка ViewPager2
+        photoPager.adapter = PhotoPagerAdapter(photos)
 
         adTitle.text = title
         adPrice.text = price
-        adDorm.text = "Общежитие: $dorm"
+        adDorm.text = getString(R.string.dorm_format, dorm)
         adDescription.text = description
-        adImage.setImageResource(imageResId)
 
         btnChat.setOnClickListener {
             Toast.makeText(this, "Написать продавцу (TODO)", Toast.LENGTH_SHORT).show()

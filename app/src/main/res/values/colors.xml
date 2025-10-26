@@ -17,4 +17,5 @@
     <color name="search_icon_color">#FFFFFF</color>
     <color name="gray">#424242</color>
     <color name="light_gray">#BDBDBD</color>
+    <color name="field_bg_dark">#444444</color>
 </resources>

@@ -8,4 +8,18 @@
     <string name="register_link">Зарегистрироваться</string>
     <string name="search_hint">Поиск объявлений</string>
     <string name="filter">Фильтр</string>
+
+    <string name="ad_title">Объявление</string>
+    <string name="product_photo">Фото товара</string>
+    <string name="back">Назад</string>
+    <string name="forward">Вперед</string>
+    <string name="photo">Фото</string>
+    <string name="sample_title">Название объявления</string>
+    <string name="sample_price">₽45,000</string>
+    <string name="description">Описание</string>
+    <string name="sample_description">Здесь будет описание товара. Информация о состоянии, комплектации и прочем.</string>
+    <string name="write">Написать</string>
+    <string name="to_favorites">В избранное</string>
+    <string name="sample_dorm">Корпус №5</string>
+    <string name="dorm_format">Корпус: %1$s</string>
 </resources>
