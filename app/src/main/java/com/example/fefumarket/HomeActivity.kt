@@ -72,7 +72,7 @@ class HomeActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_home -> { showToast("Главная"); true }
                 R.id.nav_cart -> { showToast("Избранное"); true }
-                R.id.nav_add -> { showToast("Добавить"); true }
+                R.id.nav_add -> { showToast("Публикация"); true }
                 R.id.nav_chat -> { showToast("Чат"); true }
                 R.id.nav_profile -> { showToast("Профиль"); true }
                 else -> false
