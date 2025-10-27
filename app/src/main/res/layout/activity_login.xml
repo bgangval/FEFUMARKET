@@ -78,22 +78,23 @@
         app:layout_constraintWidth_percent="0.8" />
 
     <!-- Кнопка входа -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/login_button"
         android:fontFamily="@font/montserrat_regular"
-        style="@style/Widget.AppCompat.Button.Borderless"
+        style="@style/Widget.Material3.Button"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="65dp"
         android:layout_marginTop="96dp"
-        android:background="@drawable/blue_rounded_button"
         android:paddingHorizontal="20dp"
         android:text="@string/login_button"
         android:textColor="@color/text_white"
         android:textSize="16sp"
+        android:backgroundTint="@color/button_blue"
+        app:cornerRadius="28dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/password"
-        app:layout_constraintWidth_percent="0.8" />
+        app:layout_constraintWidth_percent="0.6" />
 
     <!-- Ссылка на регистрацию -->
     <TextView

@@ -171,6 +171,9 @@
         </ScrollView>
 
         <!-- Кнопки -->
+    <!-- Кнопки, зафиксированные прямо над нижним баром -->
+    <!-- Кнопки -->
+    <!-- Кнопки, зафиксированные прямо над нижним баром -->
     <LinearLayout
         android:id="@+id/fixedButtons"
         android:layout_width="match_parent"
@@ -179,33 +182,35 @@
         android:padding="12dp"
         android:gravity="center"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="56dp"
-        android:background="@color/bg"
-        android:elevation="6dp">
+        android:background="@android:color/transparent"
+        android:elevation="9dp"
+        android:layout_marginBottom="76dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/contactButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="55dp"
             android:layout_weight="1"
             android:text="@string/write"
             android:textSize="16sp"
             android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/blue_rounded_button"
+            android:backgroundTint="@color/button_blue"
             android:textColor="@color/white"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            app:cornerRadius="24dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/favoriteButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="55dp"
             android:layout_weight="1"
             android:text="@string/to_favorites"
             android:textSize="16sp"
             android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/blue_rounded_button"
+            android:backgroundTint="@color/button_blue"
             android:textColor="@color/white"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            app:cornerRadius="24dp" />
     </LinearLayout>
 
     <!-- Нижняя навигация -->
