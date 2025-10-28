@@ -10,14 +10,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
         <activity
+            android:name=".FavoritesActivity"
+            android:exported="false" />
+        <activity
             android:name=".AdDetailActivity"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"
             android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" /> <!-- Экран загрузки (Loading) — запускается первым -->
         <activity
             android:name=".LoadingActivity"
             android:exported="true"

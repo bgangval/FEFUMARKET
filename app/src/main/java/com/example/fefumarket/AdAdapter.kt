@@ -41,6 +41,7 @@ class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdVi
             intent.putExtra("price", ad.price)
             intent.putExtra("seller", ad.seller)
             intent.putExtra("description", ad.description)
+            intent.putExtra("imageResId", ad.imageResId)
             context.startActivity(intent)
         }
     }

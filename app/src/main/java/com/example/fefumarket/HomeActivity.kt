@@ -1,5 +1,6 @@
 package com.example.fefumarket
 
+import android.content.Intent
 import android.graphics.PorterDuff
 import android.os.Bundle
 import android.os.Handler
@@ -33,12 +34,20 @@ class HomeActivity : AppCompatActivity() {
             window.setDecorFitsSystemWindows(false)
         }
 
+        initRecyclerView()
+        populateAds()
+        setupBottomNavigation()
+        setupSearchView()
+    }
+
+    private fun initRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(20)
+    }
 
-        // Пример объявлений
+    private fun populateAds() {
         originalAdList.addAll(
             listOf(
                 Ad("Ноутбук Lenovo", "₽45,000", "Иван", "Новый, i7, 16GB RAM", R.drawable.laptop_ic_test),
@@ -55,44 +64,41 @@ class HomeActivity : AppCompatActivity() {
         adAdapter = AdAdapter(originalAdList)
         recyclerView.adapter = adAdapter
 
-        // Подстраиваем padding под BottomNavigationView
+        // Padding под BottomNavigationView
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         bottomNavigation.viewTreeObserver.addOnGlobalLayoutListener {
             recyclerView.setPadding(0, 0, 0, bottomNavigation.height)
         }
-
-        setupBottomNavigation()
-        setupSearchView()
     }
 
-    // ------------------- Bottom Navigation -------------------
     private fun setupBottomNavigation() {
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.setOnItemSelectedListener { item: MenuItem ->
+        bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_home -> { showToast("Главная"); true }
-                R.id.nav_cart -> { showToast("Избранное"); true }
+                R.id.nav_home -> true
+                R.id.nav_favorites -> {
+                    val intent = Intent(this, FavoritesActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    true
+                }
                 R.id.nav_add -> { showToast("Публикация"); true }
                 R.id.nav_chat -> { showToast("Чат"); true }
                 R.id.nav_profile -> { showToast("Профиль"); true }
                 else -> false
             }
         }
-        bottomNavigation.selectedItemId = R.id.nav_home
 
-        val btnFilter: ImageButton = findViewById(R.id.btnFilter)
-        btnFilter.setOnClickListener { showToast("Фильтр (TODO)") }
+        // Подсветка выбранного пункта через post, чтобы меню было загружено
+        bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_home }
     }
 
     private fun showToast(text: String) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 
-    // ------------------- Search -------------------
     private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
-
-        // Разворачиваем и активируем поле поиска
         searchView.isIconified = false
         searchView.requestFocusFromTouch()
         searchView.clearFocus()
@@ -100,11 +106,9 @@ class HomeActivity : AppCompatActivity() {
         val color = ContextCompat.getColor(this, R.color.search_icon_color)
 
         searchView.post {
-            // Иконка поиска
             val searchIcon = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
             searchIcon?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
 
-            // Текстовое поле (EditText)
             val searchEditText = searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
             searchEditText?.apply {
                 setTextColor(color)
@@ -113,18 +117,12 @@ class HomeActivity : AppCompatActivity() {
                 isFocusable = true
                 isFocusableInTouchMode = true
                 isCursorVisible = true
-                imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
-                inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                        android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
-                        android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             }
 
-            // Кнопка очистки
             val closeButton = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
             closeButton?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
 
-        // Слушатели текста
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 performSearch(query.orEmpty())
@@ -161,9 +159,14 @@ class HomeActivity : AppCompatActivity() {
         searchHandler.removeCallbacks(searchRunnable)
         super.onDestroy()
     }
+
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        bottomNavigation.selectedItemId = R.id.nav_home
+    }
 }
 
-// ------------------- Модель объявления -------------------
 data class Ad(
     val title: String,
     val price: String,

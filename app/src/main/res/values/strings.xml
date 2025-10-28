@@ -22,4 +22,10 @@
     <string name="to_favorites">В избранное</string>
     <string name="sample_dorm">Корпус №5</string>
     <string name="dorm_format">Корпус: %1$s</string>
+    <string name="favorites">Избранное</string>
+    <string name="remove_from_favorites">Удалить из избранного</string>
+    <string name="sample_title_fav">Название товара</string>
+    <string name="sample_price_fav">1000 ₽</string>
+    <string name="removed_from_favorites">Удалено из избранного</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
 </resources>

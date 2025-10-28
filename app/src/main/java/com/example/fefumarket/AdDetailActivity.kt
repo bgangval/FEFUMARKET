@@ -10,6 +10,8 @@ import androidx.viewpager2.widget.ViewPager2
 
 class AdDetailActivity : AppCompatActivity() {
 
+    private lateinit var ad: Ad
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ad_detail)
@@ -32,9 +34,12 @@ class AdDetailActivity : AppCompatActivity() {
 
         // Получаем данные из intent
         val title = intent.getStringExtra("title")
-        val dorm = intent.getStringExtra("dorm")
+        val seller = intent.getStringExtra("seller")
         val price = intent.getStringExtra("price")
         val description = intent.getStringExtra("description")
+        val imageResId = intent.getIntExtra("imageResId", 0)
+
+        ad = Ad(title ?: "", price ?: "", seller ?: "", description ?: "", imageResId)
 
         // Пример списка изображений (пока статичный)
         val photos = listOf(
@@ -49,7 +54,7 @@ class AdDetailActivity : AppCompatActivity() {
         // Заполняем данные
         adTitle.text = title
         adPrice.text = price
-        adDorm.text = getString(R.string.dorm_format, dorm)
+        adDorm.text = getString(R.string.dorm_format, seller)
         adDescription.text = description
 
         // ====== ОБРАБОТКА КНОПОК ======
@@ -60,17 +65,20 @@ class AdDetailActivity : AppCompatActivity() {
         }
 
         // Верхнее "Избранное"
-        var isFavorite = false // состояние
+        var isFavorite = FavoritesManager.isFavorite(ad) // состояние
+
+        updateFavoriteIcon(btnFavoriteTop, isFavorite)
 
         btnFavoriteTop.setOnClickListener {
             isFavorite = !isFavorite
             if (isFavorite) {
-                btnFavoriteTop.setImageResource(R.drawable.ic_heart_red)
+                FavoritesManager.add(ad)
                 Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show()
             } else {
-                btnFavoriteTop.setImageResource(R.drawable.ic_heart_top_bar)
+                FavoritesManager.remove(ad)
                 Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show()
             }
+            updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
 
         // Верхний "Reply"
@@ -85,7 +93,23 @@ class AdDetailActivity : AppCompatActivity() {
 
         // Нижняя кнопка "Избранное"
         btnFavorite.setOnClickListener {
-            Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show()
+            isFavorite = !isFavorite
+            if (isFavorite) {
+                FavoritesManager.add(ad)
+                Toast.makeText(this, "Добавлено в избранное", Toast.LENGTH_SHORT).show()
+            } else {
+                FavoritesManager.remove(ad)
+                Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show()
+            }
+            updateFavoriteIcon(btnFavoriteTop, isFavorite)
+        }
+    }
+
+    private fun updateFavoriteIcon(button: ImageButton, isFavorite: Boolean) {
+        if (isFavorite) {
+            button.setImageResource(R.drawable.ic_heart_red)
+        } else {
+            button.setImageResource(R.drawable.ic_heart_top_bar)
         }
     }
 }
