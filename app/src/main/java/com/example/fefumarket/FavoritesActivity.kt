@@ -1,4 +1,3 @@
-// FavoritesActivity.kt
 package com.example.fefumarket
 
 import android.content.Intent

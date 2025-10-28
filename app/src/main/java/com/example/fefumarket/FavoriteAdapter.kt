@@ -1,4 +1,3 @@
-// FavoriteAdapter.kt
 package com.example.fefumarket
 
 import android.content.Intent
@@ -35,6 +34,9 @@ class FavoriteAdapter(
         holder.itemTitle.text = item.title
         holder.itemDescription.text = item.price
         holder.itemImage.setImageResource(item.imageResId)
+
+        // Устанавливаем красное сердечко, так как товар в избранном
+        holder.btnRemoveFavorite.setImageResource(R.drawable.ic_heart_red)
 
         // Удаление элемента по кнопке
         holder.btnRemoveFavorite.setOnClickListener {
