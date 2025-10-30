@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="10dp"
+    android:background="@drawable/bg_chat_card"
+    android:layout_margin="6dp">
+
+    <!-- Фото товара -->
+    <ImageView
+        android:id="@+id/chatAvatar"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginEnd="12dp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/bg_product_image"
+        android:contentDescription="@string/chat_product_image" />
+
+    <!-- Текстовая часть -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <!-- Имя продавца -->
+        <TextView
+            android:id="@+id/chatName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Имя продавца"
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="17sp" />
+
+        <!-- Название товара -->
+        <TextView
+            android:id="@+id/chatProduct"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Название товара"
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/text_hint"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- Последнее сообщение -->
+        <TextView
+            android:id="@+id/chatLastMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Последнее сообщение..."
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/text_hint"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/chatMuteIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_mute"
+        android:visibility="gone" />
+</LinearLayout>

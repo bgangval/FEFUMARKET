@@ -28,4 +28,11 @@
     <string name="sample_price_fav">1000 ₽</string>
     <string name="removed_from_favorites">Удалено из избранного</string>
     <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="messages">Сообщения</string>
+    <string name="chat_title">Чат</string>
+    <string name="message_hint">Введите сообщение</string>
+    <string name="send_button_desc">Отправить</string>
+    <string name="chat_product_image">Фото товара</string>
+    <string name="chat_product_title">Название товара</string>
+    <string name="chat_last_message">Последнее сообщение...</string>
 </resources>

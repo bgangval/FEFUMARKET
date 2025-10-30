@@ -54,13 +54,18 @@ class FavoritesActivity : AppCompatActivity() {
                 }
                 R.id.nav_favorites -> true // Уже в Избранном
                 R.id.nav_add -> true
-                R.id.nav_chat -> true
+                R.id.nav_chat -> {
+                    val intent = Intent(this, ChatActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    true
+                }
                 R.id.nav_profile -> true
                 else -> false
             }
         }
 
         // Подсветка активного пункта
-        bottomNavigation.selectedItemId = R.id.nav_favorites
+        bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_favorites }
     }
 }

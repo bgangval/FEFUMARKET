@@ -83,13 +83,16 @@ class HomeActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_add -> { showToast("Публикация"); true }
-                R.id.nav_chat -> { showToast("Чат"); true }
+                R.id.nav_chat -> {
+                    val intent = Intent(this, ChatActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    true
+                }
                 R.id.nav_profile -> { showToast("Профиль"); true }
                 else -> false
             }
         }
-
-        // Подсветка выбранного пункта через post, чтобы меню было загружено
         bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_home }
     }
 
