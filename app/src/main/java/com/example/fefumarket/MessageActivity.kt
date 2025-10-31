@@ -3,6 +3,7 @@ package com.example.fefumarket
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,9 +22,21 @@ class MessageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message)
 
+        // Получаем данные из Intent
         val chatName = intent.getStringExtra("chatName") ?: "Чат"
-        findViewById<TextView>(R.id.chatTitle).text = chatName
+        val productName = intent.getStringExtra("productName") ?: "Название товара"
 
+        // Устанавливаем имя и товар в шапку
+        findViewById<TextView>(R.id.chatTitle).text = chatName
+        findViewById<TextView>(R.id.chatSubtitle).text = productName
+
+        // === Обработка кнопки "Назад" ===
+        val backButton = findViewById<ImageView>(R.id.backButton)
+        backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        // === Настройка RecyclerView и кнопки отправки ===
         recyclerView = findViewById(R.id.recyclerViewMessages)
         inputMessage = findViewById(R.id.inputMessage)
         sendButton = findViewById(R.id.sendButton)
