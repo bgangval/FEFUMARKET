@@ -14,6 +14,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class ChatActivity : AppCompatActivity() {
 
+    private lateinit var chats: MutableList<ChatItem>
+    private lateinit var adapter: ChatAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -21,16 +24,31 @@ class ChatActivity : AppCompatActivity() {
         val recyclerView: RecyclerView = findViewById(R.id.chatRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val chats = mutableListOf(
-            ChatItem("Иван", "Ноутбук Lenovo", "Привет! А ноутбук ещё в продаже?", R.drawable.laptop_ic_test),
-            ChatItem("Мария", "Айфон 12", "Да, всё ещё актуально 😊", R.drawable.iphone_ic_test),
-            ChatItem("Олег", "Кроссовки Nike", "Можете отправить фото поближе?", R.drawable.nike_ic_test)
-        )
-
-        val adapter = ChatAdapter(chats)
+        // Загружаем все чаты из менеджера
+        chats = MessagesManager.getAllChats().toMutableList()
+        adapter = ChatAdapter(chats)
         recyclerView.adapter = adapter
 
-        // Свайпы
+        // Проверяем, пришли ли из объявления
+        val chatId = intent.getStringExtra("CHAT_ID")
+        chatId?.let {
+            val chat = MessagesManager.getAllChats().find { "${it.sellerName}_${it.productName}" == chatId }
+            chat?.let { c ->
+                if (!chats.contains(c)) {
+                    chats.add(c)
+                    adapter.notifyItemInserted(chats.size - 1)
+                }
+                // Прокручиваем к нужному чату
+                val position = chats.indexOf(c)
+                recyclerView.scrollToPosition(position)
+            }
+        }
+
+        setupSwipe(recyclerView)
+        setupBottomNavigation()
+    }
+
+    private fun setupSwipe(recyclerView: RecyclerView) {
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             val deleteIcon = ContextCompat.getDrawable(this@ChatActivity, R.drawable.ic_delete)
             val muteIcon = ContextCompat.getDrawable(this@ChatActivity, R.drawable.ic_mute)
@@ -49,8 +67,10 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onChildDraw(c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder,
-                                     dX: Float, dY: Float, actionState: Int, isActive: Boolean) {
+            override fun onChildDraw(
+                c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder,
+                dX: Float, dY: Float, actionState: Int, isActive: Boolean
+            ) {
                 val itemView = vh.itemView
                 val icon: android.graphics.drawable.Drawable?
 
@@ -83,8 +103,6 @@ class ChatActivity : AppCompatActivity() {
         }
 
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(recyclerView)
-
-        setupBottomNavigation()
     }
 
     private fun setupBottomNavigation() {

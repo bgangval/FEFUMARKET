@@ -1,38 +1,48 @@
 <resources>
-    <string name="app_name">FEFUMARKET</string>
-    <string name="logo_description">Логотип</string>
-    <string name="login_title">Вход</string>
-    <string name="email_hint">Почта</string>
-    <string name="password_hint">Пароль</string>
-    <string name="login_button">Войти</string>
-    <string name="register_link">Зарегистрироваться</string>
-    <string name="search_hint">Поиск объявлений</string>
-    <string name="filter">Фильтр</string>
+        <string name="app_name">FEFUMARKET</string>
+        <string name="logo_description">Логотип</string>
 
-    <string name="ad_title">Объявление</string>
-    <string name="product_photo">Фото товара</string>
-    <string name="back">Назад</string>
-    <string name="forward">Вперед</string>
-    <string name="photo">Фото</string>
-    <string name="sample_title">Название объявления</string>
-    <string name="sample_price">₽45,000</string>
-    <string name="description">Описание</string>
-    <string name="sample_description">Здесь будет описание товара. Информация о состоянии, комплектации и прочем.</string>
-    <string name="write">Написать</string>
-    <string name="to_favorites">В избранное</string>
-    <string name="sample_dorm">Корпус №5</string>
-    <string name="dorm_format">Корпус: %1$s</string>
-    <string name="favorites">Избранное</string>
-    <string name="remove_from_favorites">Удалить из избранного</string>
-    <string name="sample_title_fav">Название товара</string>
-    <string name="sample_price_fav">1000 ₽</string>
-    <string name="removed_from_favorites">Удалено из избранного</string>
-    <string name="add_to_favorites">Добавить в избранное</string>
-    <string name="messages">Сообщения</string>
-    <string name="chat_title">Чат</string>
-    <string name="message_hint">Введите сообщение</string>
-    <string name="send_button_desc">Отправить</string>
-    <string name="chat_product_image">Фото товара</string>
-    <string name="chat_product_title">Название товара</string>
-    <string name="chat_last_message">Последнее сообщение...</string>
+        <!-- Экран входа -->
+        <string name="login_title">Вход</string>
+        <string name="email_hint">Почта</string>
+        <string name="password_hint">Пароль</string>
+        <string name="login_button">Войти</string>
+        <string name="register_link">Зарегистрироваться</string>
+
+        <!-- Главное -->
+        <string name="search_hint">Поиск объявлений</string>
+        <string name="filter">Фильтр</string>
+
+        <!-- Объявления -->
+        <string name="ad_title">Объявление</string>
+        <string name="product_photo">Фото товара</string>
+        <string name="back">Назад</string>
+        <string name="forward">Вперед</string>
+        <string name="photo">Фото</string>
+        <string name="sample_title">Название объявления</string>
+        <string name="sample_price">₽45,000</string>
+        <string name="description">Описание</string>
+        <string name="sample_description">Здесь будет описание товара. Информация о состоянии, комплектации и прочем.</string>
+        <string name="write">Написать</string>
+        <string name="to_favorites">В избранное</string>
+        <string name="sample_dorm">Корпус №5</string>
+        <string name="dorm_format">Корпус: %1$s</string>
+
+        <!-- Избранного -->
+        <string name="favorites">Избранное</string>
+        <string name="remove_from_favorites">Удалить из избранного</string>
+        <string name="sample_title_fav">Название товара</string>
+        <string name="sample_price_fav">1000 ₽</string>
+        <string name="removed_from_favorites">Удалено из избранного</string>
+        <string name="add_to_favorites">Добавить в избранное</string>
+
+        <!-- Сообщения и чат -->
+        <string name="messages">Сообщения</string>
+        <string name="chat_title">Чат</string>
+        <string name="message_hint">Введите сообщение</string>
+        <string name="send_button_desc">Отправить</string>
+        <string name="chat_product_image">Фото товара</string>
+        <string name="chat_product_title">Название товара</string>
+        <string name="chat_last_message">Последнее сообщение...</string>
+
 </resources>

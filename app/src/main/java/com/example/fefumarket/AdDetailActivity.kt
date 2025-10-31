@@ -1,5 +1,6 @@
 package com.example.fefumarket
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
@@ -66,7 +67,6 @@ class AdDetailActivity : AppCompatActivity() {
 
         // Верхнее "Избранное"
         var isFavorite = FavoritesManager.isFavorite(ad) // состояние
-
         updateFavoriteIcon(btnFavoriteTop, isFavorite)
 
         btnFavoriteTop.setOnClickListener {
@@ -81,14 +81,14 @@ class AdDetailActivity : AppCompatActivity() {
             updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
 
-        // Верхний "Reply"
-        btnChatTop.setOnClickListener {
-            Toast.makeText(this, "Поделиться", Toast.LENGTH_SHORT).show()
+
+        btnChat.setOnClickListener {
+            openChat()
         }
 
-        // Нижняя кнопка "Написать"
-        btnChat.setOnClickListener {
-            Toast.makeText(this, "Написать продавцу", Toast.LENGTH_SHORT).show()
+        // Верхняя кнопка "Reply"
+        btnChatTop.setOnClickListener {
+            openChat()
         }
 
         // Нижняя кнопка "Избранное"
@@ -111,5 +111,16 @@ class AdDetailActivity : AppCompatActivity() {
         } else {
             button.setImageResource(R.drawable.ic_heart_top_bar)
         }
+    }
+
+    // Функция открытия чата
+    private fun openChat() {
+        val chatId = "${ad.title}_${ad.seller}" // уникальный ID чата
+        // Создаём чат, если его ещё нет
+        MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, ad.imageResId)
+
+        val intent = Intent(this, MessageActivity::class.java)
+        intent.putExtra("CHAT_ID", chatId)
+        startActivity(intent)
     }
 }
