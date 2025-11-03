@@ -38,10 +38,13 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
         holder.muteIcon.visibility = View.VISIBLE
 
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, MessageActivity::class.java)
-            intent.putExtra("chatName", chat.sellerName)
-            intent.putExtra("productName", chat.productName)
+            val context = it.context
+            val intent = Intent(context, MessageActivity::class.java).apply {
+                putExtra("CHAT_ID", "${chat.sellerName}_${chat.productName}")
+                putExtra("SELLER_NAME", chat.sellerName)
+                putExtra("PRODUCT_NAME", chat.productName)
+                putExtra("AVATAR_ID", chat.avatarResId)
+            }
             context.startActivity(intent)
         }
     }

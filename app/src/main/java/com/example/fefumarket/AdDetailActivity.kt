@@ -34,13 +34,22 @@ class AdDetailActivity : AppCompatActivity() {
         val btnChatTop: ImageButton = findViewById(R.id.btnChatTop)
 
         // Получаем данные из intent
-        val title = intent.getStringExtra("title")
-        val seller = intent.getStringExtra("seller")
-        val price = intent.getStringExtra("price")
-        val description = intent.getStringExtra("description")
+        val title = intent.getStringExtra("title") ?: ""
+        val seller = intent.getStringExtra("seller") ?: ""
+        val price = intent.getStringExtra("price") ?: ""
+        val dorm = intent.getStringExtra("dorm") ?: ""
+        val description = intent.getStringExtra("description") ?: ""
         val imageResId = intent.getIntExtra("imageResId", 0)
 
-        ad = Ad(title ?: "", price ?: "", seller ?: "", description ?: "", imageResId)
+        // Создаём объект Ad с полем dorm
+        ad = Ad(
+            title = title,
+            price = price,
+            seller = seller,
+            description = description,
+            imageResId = imageResId,
+            dorm = dorm
+        )
 
         // Пример списка изображений (пока статичный)
         val photos = listOf(
@@ -53,20 +62,17 @@ class AdDetailActivity : AppCompatActivity() {
         photoPager.adapter = PhotoPagerAdapter(photos)
 
         // Заполняем данные
-        adTitle.text = title
-        adPrice.text = price
-        adDorm.text = getString(R.string.dorm_format, seller)
-        adDescription.text = description
+        adTitle.text = ad.title
+        adPrice.text = ad.price
+        adDorm.text = ad.dorm
+        adDescription.text = ad.description
 
         // ====== ОБРАБОТКА КНОПОК ======
 
-        // Кнопка назад
-        btnBack.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
+        btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         // Верхнее "Избранное"
-        var isFavorite = FavoritesManager.isFavorite(ad) // состояние
+        var isFavorite = FavoritesManager.isFavorite(ad)
         updateFavoriteIcon(btnFavoriteTop, isFavorite)
 
         btnFavoriteTop.setOnClickListener {
@@ -81,16 +87,6 @@ class AdDetailActivity : AppCompatActivity() {
             updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
 
-
-        btnChat.setOnClickListener {
-            openChat()
-        }
-
-        // Верхняя кнопка "Reply"
-        btnChatTop.setOnClickListener {
-            openChat()
-        }
-
         // Нижняя кнопка "Избранное"
         btnFavorite.setOnClickListener {
             isFavorite = !isFavorite
@@ -103,6 +99,10 @@ class AdDetailActivity : AppCompatActivity() {
             }
             updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
+
+        // Кнопки "Написать сообщение"
+        btnChat.setOnClickListener { openChat() }
+        btnChatTop.setOnClickListener { openChat() }
     }
 
     private fun updateFavoriteIcon(button: ImageButton, isFavorite: Boolean) {
@@ -113,14 +113,15 @@ class AdDetailActivity : AppCompatActivity() {
         }
     }
 
-    // Функция открытия чата
     private fun openChat() {
-        val chatId = "${ad.title}_${ad.seller}" // уникальный ID чата
-        // Создаём чат, если его ещё нет
+        val chatId = "${ad.seller}_${ad.title}"
         MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, ad.imageResId)
 
         val intent = Intent(this, MessageActivity::class.java)
         intent.putExtra("CHAT_ID", chatId)
+        intent.putExtra("SELLER_NAME", ad.seller)
+        intent.putExtra("PRODUCT_NAME", ad.title)
+        intent.putExtra("AVATAR_ID", ad.imageResId)
         startActivity(intent)
     }
 }

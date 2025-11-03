@@ -1,57 +1,58 @@
 package com.example.fefumarket
 
+import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-// Класс адаптера для RecyclerView, который отображает список объявлений (ads)
 class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdViewHolder>() {
 
-    // Внутренний класс ViewHolder для кэширования ссылок на View в элементе списка
-    class AdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        // Ссылки на TextView из разметки item_ad.xml для быстрого доступа
-        val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
-        val tvPrice: TextView = itemView.findViewById(R.id.tvPrice)
-        val tvSeller: TextView = itemView.findViewById(R.id.tvSeller)
-        val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
+    inner class AdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val image: ImageView = itemView.findViewById(R.id.adImage)          // добавьте этот id в xml
+        val title: TextView = itemView.findViewById(R.id.tvTitle)
+        val price: TextView = itemView.findViewById(R.id.tvPrice)
+        val seller: TextView = itemView.findViewById(R.id.tvSeller)
+        val dorm: TextView = itemView.findViewById(R.id.tvDorm)            // добавьте этот TextView в xml для корпуса
     }
 
-    // Метод создания нового ViewHolder: инфлейтит разметку item_ad.xml
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_ad, parent, false)
         return AdViewHolder(view)
     }
 
-    // Метод привязки данных к ViewHolder: заполняет View данными из ads[position]
     override fun onBindViewHolder(holder: AdViewHolder, position: Int) {
         val ad = ads[position]
-        holder.tvTitle.text = ad.title
-        holder.tvPrice.text = ad.price
-        holder.tvSeller.text = ad.seller
-        holder.tvDescription.text = ad.description
+        holder.image.setImageResource(ad.imageResId)
+        holder.title.text = ad.title
+        holder.price.text = ad.price
+        holder.seller.text = ad.seller
+        holder.dorm.text = ad.dorm
 
-        // Обработчик клика по элементу: запускает AdDetailActivity с данными объявления
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = android.content.Intent(context, AdDetailActivity::class.java)
-            intent.putExtra("title", ad.title)
-            intent.putExtra("price", ad.price)
-            intent.putExtra("seller", ad.seller)
-            intent.putExtra("description", ad.description)
-            intent.putExtra("imageResId", ad.imageResId)
-            context.startActivity(intent)
+            openAdDetail(it.context, ad)
         }
     }
 
-    // Метод возвращает количество элементов в списке
-    override fun getItemCount() = ads.size
+    override fun getItemCount(): Int = ads.size
 
-    // Публичный метод для обновления данных: заменяет список и уведомляет адаптер
     fun updateAds(newAds: List<Ad>) {
         ads = newAds
         notifyDataSetChanged()
+    }
+
+    private fun openAdDetail(context: Context, ad: Ad) {
+        val intent = Intent(context, AdDetailActivity::class.java).apply {
+            putExtra("title", ad.title)
+            putExtra("price", ad.price)
+            putExtra("seller", ad.seller)
+            putExtra("description", ad.description)
+            putExtra("imageResId", ad.imageResId)
+            putExtra("dorm", ad.dorm) // ✅ Передаём корпус
+        }
+        context.startActivity(intent)
     }
 }

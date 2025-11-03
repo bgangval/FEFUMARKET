@@ -50,14 +50,70 @@ class HomeActivity : AppCompatActivity() {
     private fun populateAds() {
         originalAdList.addAll(
             listOf(
-                Ad("Ноутбук Lenovo", "₽45,000", "Иван", "Новый, i7, 16GB RAM", R.drawable.laptop_ic_test),
-                Ad("Айфон 12", "₽70,000", "Мария", "В отличном состоянии, 128GB", R.drawable.iphone_ic_test),
-                Ad("Кроссовки Nike", "₽9,000", "Олег", "Размер 42, оригинал", R.drawable.nike_ic_test),
-                Ad("Монитор Samsung", "₽12,500", "Анна", "27 дюймов, 4K", R.drawable.monitor_ic_test),
-                Ad("Наушники Sony", "₽5,000", "Виктор", "Беспроводные, шумоподавление", R.drawable.sony_ic_test),
-                Ad("Велосипед Giant", "₽25,000", "Петр", "Горный, 21 скорость", R.drawable.bike_ic_test),
-                Ad("Книга по Android", "₽1,200", "Елена", "Kotlin для начинающих", R.drawable.book_ic_test),
-                Ad("Часы Casio", "₽3,500", "Дмитрий", "Кварцевые, водонепроницаемые", R.drawable.watch_ic_test)
+                Ad(
+                    title = "Ноутбук Lenovo",
+                    price = "₽45,000",
+                    seller = "Иван",
+                    description = "Новый, i7, 16GB RAM",
+                    imageResId = R.drawable.laptop_ic_test,
+                    dorm = "Корпус 8"
+                ),
+                Ad(
+                    title = "Айфон 12",
+                    price = "₽70,000",
+                    seller = "Мария",
+                    description = "В отличном состоянии, 128GB",
+                    imageResId = R.drawable.iphone_ic_test,
+                    dorm = "Корпус 5"
+                ),
+                Ad(
+                    title = "Кроссовки Nike",
+                    price = "₽9,000",
+                    seller = "Олег",
+                    description = "Размер 42, оригинал",
+                    imageResId = R.drawable.nike_ic_test,
+                    dorm = "Корпус 3"
+                ),
+                Ad(
+                    title = "Монитор Samsung",
+                    price = "₽12,500",
+                    seller = "Анна",
+                    description = "27 дюймов, 4K",
+                    imageResId = R.drawable.monitor_ic_test,
+                    dorm = "Корпус 4"
+                ),
+                Ad(
+                    title = "Наушники Sony",
+                    price = "₽5,000",
+                    seller = "Виктор",
+                    description = "Беспроводные, шумоподавление",
+                    imageResId = R.drawable.sony_ic_test,
+                    dorm = "Корпус 2"
+                ),
+                Ad(
+                    title = "Велосипед Giant",
+                    price = "₽25,000",
+                    seller = "Петр",
+                    description = "Горный, 21 скорость",
+                    imageResId = R.drawable.bike_ic_test,
+                    dorm = "Корпус 6"
+                ),
+                Ad(
+                    title = "Книга по Android",
+                    price = "₽1,200",
+                    seller = "Елена",
+                    description = "Kotlin для начинающих",
+                    imageResId = R.drawable.book_ic_test,
+                    dorm = "Корпус 1"
+                ),
+                Ad(
+                    title = "Часы Casio",
+                    price = "₽3,500",
+                    seller = "Дмитрий",
+                    description = "Кварцевые, водонепроницаемые",
+                    imageResId = R.drawable.watch_ic_test,
+                    dorm = "Корпус 7"
+                )
             )
         )
 
@@ -175,5 +231,6 @@ data class Ad(
     val price: String,
     val seller: String,
     val description: String = "",
-    val imageResId: Int
+    val imageResId: Int,
+    val dorm: String = ""    // ✅ корпус общежития
 )

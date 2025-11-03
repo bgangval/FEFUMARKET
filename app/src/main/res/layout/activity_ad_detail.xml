@@ -65,7 +65,7 @@
             android:layout_height="match_parent"
             android:layout_marginTop="110dp"
             android:clipToPadding="false"
-            android:paddingBottom="160dp">
+            android:paddingBottom="90dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -170,10 +170,6 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
 
-        <!-- Кнопки -->
-    <!-- Кнопки, зафиксированные прямо над нижним баром -->
-    <!-- Кнопки -->
-    <!-- Кнопки, зафиксированные прямо над нижним баром -->
     <LinearLayout
         android:id="@+id/fixedButtons"
         android:layout_width="match_parent"
@@ -184,7 +180,7 @@
         android:layout_gravity="bottom"
         android:background="@android:color/transparent"
         android:elevation="9dp"
-        android:layout_marginBottom="76dp">
+        android:layout_marginBottom="10dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/contactButton"
@@ -212,17 +208,4 @@
             android:layout_marginStart="8dp"
             app:cornerRadius="24dp" />
     </LinearLayout>
-
-    <!-- Нижняя навигация -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/bottom_bar_bg"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_menu"
-        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
-        android:elevation="8dp" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
