@@ -12,11 +12,11 @@ import androidx.recyclerview.widget.RecyclerView
 class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdViewHolder>() {
 
     inner class AdViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val image: ImageView = itemView.findViewById(R.id.adImage)          // добавьте этот id в xml
+        val image: ImageView = itemView.findViewById(R.id.adImage)
         val title: TextView = itemView.findViewById(R.id.tvTitle)
         val price: TextView = itemView.findViewById(R.id.tvPrice)
         val seller: TextView = itemView.findViewById(R.id.tvSeller)
-        val dorm: TextView = itemView.findViewById(R.id.tvDorm)            // добавьте этот TextView в xml для корпуса
+        val dorm: TextView = itemView.findViewById(R.id.tvDorm)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AdViewHolder {
@@ -48,10 +48,10 @@ class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdVi
         val intent = Intent(context, AdDetailActivity::class.java).apply {
             putExtra("title", ad.title)
             putExtra("price", ad.price)
+            putExtra("dorm", ad.dorm)
             putExtra("seller", ad.seller)
             putExtra("description", ad.description)
             putExtra("imageResId", ad.imageResId)
-            putExtra("dorm", ad.dorm) // ✅ Передаём корпус
         }
         context.startActivity(intent)
     }

@@ -6,8 +6,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.MenuItem
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -22,7 +20,6 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adAdapter: AdAdapter
-    private val originalAdList = mutableListOf<Ad>()
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
 
@@ -35,9 +32,9 @@ class HomeActivity : AppCompatActivity() {
         }
 
         initRecyclerView()
-        populateAds()
         setupBottomNavigation()
         setupSearchView()
+        performSearch("") // показать все объявления
     }
 
     private fun initRecyclerView() {
@@ -45,86 +42,8 @@ class HomeActivity : AppCompatActivity() {
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(20)
-    }
-
-    private fun populateAds() {
-        originalAdList.addAll(
-            listOf(
-                Ad(
-                    title = "Ноутбук Lenovo",
-                    price = "₽45,000",
-                    seller = "Иван",
-                    description = "Новый, i7, 16GB RAM",
-                    imageResId = R.drawable.laptop_ic_test,
-                    dorm = "Корпус 8"
-                ),
-                Ad(
-                    title = "Айфон 12",
-                    price = "₽70,000",
-                    seller = "Мария",
-                    description = "В отличном состоянии, 128GB",
-                    imageResId = R.drawable.iphone_ic_test,
-                    dorm = "Корпус 5"
-                ),
-                Ad(
-                    title = "Кроссовки Nike",
-                    price = "₽9,000",
-                    seller = "Олег",
-                    description = "Размер 42, оригинал",
-                    imageResId = R.drawable.nike_ic_test,
-                    dorm = "Корпус 3"
-                ),
-                Ad(
-                    title = "Монитор Samsung",
-                    price = "₽12,500",
-                    seller = "Анна",
-                    description = "27 дюймов, 4K",
-                    imageResId = R.drawable.monitor_ic_test,
-                    dorm = "Корпус 4"
-                ),
-                Ad(
-                    title = "Наушники Sony",
-                    price = "₽5,000",
-                    seller = "Виктор",
-                    description = "Беспроводные, шумоподавление",
-                    imageResId = R.drawable.sony_ic_test,
-                    dorm = "Корпус 2"
-                ),
-                Ad(
-                    title = "Велосипед Giant",
-                    price = "₽25,000",
-                    seller = "Петр",
-                    description = "Горный, 21 скорость",
-                    imageResId = R.drawable.bike_ic_test,
-                    dorm = "Корпус 6"
-                ),
-                Ad(
-                    title = "Книга по Android",
-                    price = "₽1,200",
-                    seller = "Елена",
-                    description = "Kotlin для начинающих",
-                    imageResId = R.drawable.book_ic_test,
-                    dorm = "Корпус 1"
-                ),
-                Ad(
-                    title = "Часы Casio",
-                    price = "₽3,500",
-                    seller = "Дмитрий",
-                    description = "Кварцевые, водонепроницаемые",
-                    imageResId = R.drawable.watch_ic_test,
-                    dorm = "Корпус 7"
-                )
-            )
-        )
-
-        adAdapter = AdAdapter(originalAdList)
+        adAdapter = AdAdapter(emptyList())
         recyclerView.adapter = adAdapter
-
-        // Padding под BottomNavigationView
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.viewTreeObserver.addOnGlobalLayoutListener {
-            recyclerView.setPadding(0, 0, 0, bottomNavigation.height)
-        }
     }
 
     private fun setupBottomNavigation() {
@@ -198,9 +117,9 @@ class HomeActivity : AppCompatActivity() {
 
     private fun performSearch(query: String) {
         val filteredList = if (query.isEmpty()) {
-            originalAdList.toList()
+            AdRepository.ads
         } else {
-            originalAdList.filter { ad ->
+            AdRepository.ads.filter { ad ->
                 ad.title.contains(query, ignoreCase = true) ||
                         ad.seller.contains(query, ignoreCase = true) ||
                         ad.price.contains(query, ignoreCase = true) ||
@@ -225,12 +144,3 @@ class HomeActivity : AppCompatActivity() {
         bottomNavigation.selectedItemId = R.id.nav_home
     }
 }
-
-data class Ad(
-    val title: String,
-    val price: String,
-    val seller: String,
-    val description: String = "",
-    val imageResId: Int,
-    val dorm: String = ""    // ✅ корпус общежития
-)

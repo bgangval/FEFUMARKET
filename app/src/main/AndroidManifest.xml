@@ -9,43 +9,69 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
+
+        <!-- Экран сообщений -->
         <activity
             android:name=".MessageActivity"
             android:exported="false" />
+
+        <!-- Экран чата -->
         <activity
             android:name=".ChatActivity"
             android:exported="false" />
+
+        <!-- Избранное -->
         <activity
             android:name=".FavoritesActivity"
             android:exported="false" />
-        <activity
-            android:name=".AdDetailActivity"
-            android:exported="false" />
+
+        <!-- Детали объявления с поддержкой App Link -->
+        <activity android:name=".AdDetailActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Схема для открытия приложения напрямую -->
+                <data
+                    android:scheme="fefumarket"
+                    android:host="ad" />
+            </intent-filter>
+        </activity>
+
+        <!-- Главная страница -->
         <activity
             android:name=".HomeActivity"
             android:exported="false" />
+
+        <!-- Экран загрузки -->
         <activity
             android:name=".LoadingActivity"
             android:exported="true"
             android:theme="@style/Theme.FEFUMARKET">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Экран входа -->
+        </activity>
+
+        <!-- Экран регистрации / входа -->
         <activity
             android:name=".LoginActivity"
-            android:exported="false" /> <!-- Экран ввода почты (регистрация) -->
+            android:exported="false" />
+
         <activity
             android:name=".EmailInputActivity"
-            android:exported="false" /> <!-- Экран подтверждения кода -->
+            android:exported="false" />
+
         <activity
             android:name=".CodeVerificationActivity"
-            android:exported="false" /> <!-- Экран создания пароля (регистрация) -->
+            android:exported="false" />
+
         <activity
             android:name=".PasswordCreationActivity"
             android:exported="false" />
+
     </application>
 
 </manifest>
