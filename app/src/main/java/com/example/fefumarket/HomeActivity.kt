@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import android.widget.ImageButton
 
 class HomeActivity : AppCompatActivity() {
 
@@ -34,7 +35,13 @@ class HomeActivity : AppCompatActivity() {
         initRecyclerView()
         setupBottomNavigation()
         setupSearchView()
-        performSearch("") // показать все объявления
+        performSearch("")
+
+        val btnFilter: ImageButton = findViewById(R.id.btnFilter)
+        btnFilter.setOnClickListener {
+            val intent = Intent(this, FiltersActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun initRecyclerView() {
