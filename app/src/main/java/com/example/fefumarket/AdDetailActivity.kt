@@ -34,12 +34,16 @@ class AdDetailActivity : AppCompatActivity() {
             val dorm = intent.getStringExtra("dorm") ?: ""
             val description = intent.getStringExtra("description") ?: ""
             val imageResId = intent.getIntExtra("imageResId", 0)
+            val category = intent.getStringExtra("category") ?: "Разное"
+            val condition = intent.getStringExtra("condition") ?: "Любое"
             ad = Ad(
                 title = title,
                 price = price,
                 dorm = dorm,
                 seller = seller,
                 description = description,
+                category = category,
+                condition = condition,
                 imageResId = imageResId
             )
         }

@@ -9,15 +9,14 @@
     android:fitsSystemWindows="false"
     tools:context=".HomeActivity">
 
-    <!-- Верхняя панель с поиском и фильтром -->
+    <!-- Верхняя панель -->
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="127dp"
+        android:layout_height="wrap_content"
         android:background="@color/bottom_bar_bg"
         android:elevation="4dp">
 
-        <!-- Панель инструментов (Toolbar) -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -26,10 +25,9 @@
             android:paddingStart="12dp"
             android:paddingTop="24dp"
             android:paddingEnd="12dp"
-            android:paddingBottom="12dp">
-        </androidx.appcompat.widget.Toolbar>
+            android:paddingBottom="12dp" />
 
-        <!-- Контейнер для строки поиска и кнопки фильтра -->
+        <!-- Поиск + фильтр -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -40,7 +38,6 @@
             android:paddingTop="8dp"
             android:paddingBottom="8dp">
 
-            <!-- Поле поиска -->
             <androidx.appcompat.widget.SearchView
                 android:id="@+id/searchView"
                 android:layout_width="0dp"
@@ -55,10 +52,8 @@
                 android:imeOptions="actionSearch"
                 app:iconifiedByDefault="false" />
 
-            <!-- Кнопка фильтра -->
             <ImageButton
                 android:id="@+id/btnFilter"
-                android:fontFamily="@font/montserrat_regular"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:layout_marginStart="8dp"
@@ -70,18 +65,39 @@
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Список объявлений -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:fontFamily="@font/montserrat_regular"
+    <!-- Контейнер для фильтров и списка объявлений -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:padding="4dp"
-        android:paddingBottom="72dp"
-        android:scrollbars="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:listitem="@layout/item_ad" />
+        android:orientation="vertical"
+        android:layout_marginTop="0dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- RecyclerView для чипов фильтров -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/filtersRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            tools:listitem="@layout/item_filter_chip" />
+
+        <!-- RecyclerView для объявлений -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="4dp"
+            android:paddingBottom="72dp"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/item_ad" />
+
+    </LinearLayout>
 
     <!-- Нижняя навигация -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -91,8 +107,6 @@
         android:layout_gravity="bottom"
         android:background="@color/bottom_bar_bg"
         android:fitsSystemWindows="true"
-        android:paddingBottom="0dp"
-        android:layout_marginBottom="0dp"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
         app:menu="@menu/bottom_nav_menu"

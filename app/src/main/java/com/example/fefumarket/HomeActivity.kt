@@ -1,11 +1,14 @@
 package com.example.fefumarket
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.PorterDuff
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -13,14 +16,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import android.widget.ImageButton
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adAdapter: AdAdapter
+
+    private lateinit var filtersRecyclerView: RecyclerView
+    private lateinit var filterChipAdapter: FilterChipAdapter
+
+    private var activeDorms = emptyList<String>()
+    private var activeCategories = emptyList<String>()
+    private var activeConditions = emptyList<String>()
+    private var minPriceFilter: Int? = null
+    private var maxPriceFilter: Int? = null
+
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
 
@@ -32,6 +45,7 @@ class HomeActivity : AppCompatActivity() {
             window.setDecorFitsSystemWindows(false)
         }
 
+        initFilterChips()
         initRecyclerView()
         setupBottomNavigation()
         setupSearchView()
@@ -39,9 +53,42 @@ class HomeActivity : AppCompatActivity() {
 
         val btnFilter: ImageButton = findViewById(R.id.btnFilter)
         btnFilter.setOnClickListener {
-            val intent = Intent(this, FiltersActivity::class.java)
-            startActivity(intent)
+            val intent = Intent(this, FiltersActivity::class.java).apply {
+                putExtra("DORMS", activeDorms.toTypedArray())
+                putExtra("CATEGORIES", activeCategories.toTypedArray())
+                putExtra("CONDITIONS", activeConditions.toTypedArray())
+                putExtra("MIN_PRICE", minPriceFilter?.toString())
+                putExtra("MAX_PRICE", maxPriceFilter?.toString())
+            }
+            startActivityForResult(intent, 1001)
         }
+    }
+
+    // ---------- управление видимостью чипсов ----------
+    private fun updateFilterChipsVisibility() {
+        filtersRecyclerView.post {
+            filtersRecyclerView.visibility =
+                if (filterChipAdapter.itemCount > 0) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun initFilterChips() {
+        filtersRecyclerView = findViewById(R.id.filtersRecyclerView)
+
+        filterChipAdapter = FilterChipAdapter(
+            mutableListOf(),
+            onRemove = { removed ->
+                removeFilterValue(removed)
+                performSearch("")
+            },
+            onListChanged = { updateFilterChipsVisibility() }
+        )
+
+        filtersRecyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        filtersRecyclerView.adapter = filterChipAdapter
+
+        updateFilterChipsVisibility()
     }
 
     private fun initRecyclerView() {
@@ -82,6 +129,7 @@ class HomeActivity : AppCompatActivity() {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
     }
 
+    // ---------- поиск ----------
     private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
         searchView.isIconified = false
@@ -122,27 +170,91 @@ class HomeActivity : AppCompatActivity() {
         })
     }
 
+    // ---------- фильтрация ----------
     private fun performSearch(query: String) {
-        val filteredList = if (query.isEmpty()) {
-            AdRepository.ads
-        } else {
-            AdRepository.ads.filter { ad ->
+        var result = AdRepository.ads
+
+        if (query.isNotEmpty()) {
+            result = result.filter { ad ->
                 ad.title.contains(query, ignoreCase = true) ||
                         ad.seller.contains(query, ignoreCase = true) ||
-                        ad.price.contains(query, ignoreCase = true) ||
-                        ad.description.contains(query, ignoreCase = true)
+                        ad.description.contains(query, ignoreCase = true) ||
+                        ad.price.contains(query, ignoreCase = true)
             }
         }
-        adAdapter.updateAds(filteredList)
-        if (filteredList.isEmpty()) {
-            Toast.makeText(this, "Нет результатов: '$query'", Toast.LENGTH_SHORT).show()
+
+        if (activeDorms.isNotEmpty()) result = result.filter { ad -> activeDorms.contains(ad.dorm) }
+        if (activeCategories.isNotEmpty()) result = result.filter { ad -> activeCategories.contains(ad.category) }
+        if (activeConditions.isNotEmpty()) result = result.filter { ad -> activeConditions.contains(ad.condition) }
+
+        // фильтрация по цене (убираем все нецифровые символы)
+        result = result.filter { ad ->
+            val priceValue = ad.price.replace(Regex("[^\\d]"), "").toIntOrNull() ?: 0
+            val minOk = minPriceFilter?.let { priceValue >= it } ?: true
+            val maxOk = maxPriceFilter?.let { priceValue <= it } ?: true
+            minOk && maxOk
         }
-        Log.d("HomeActivity", "Filtered: ${filteredList.size} items")
+
+        adAdapter.updateAds(result)
+        updateFilterChipsVisibility() // обновляем видимость блока после фильтрации
+
+        if (result.isEmpty()) {
+            Toast.makeText(this, "Нет результатов", Toast.LENGTH_SHORT).show()
+        }
+
+        Log.d("HomeActivity", "Filtered: ${result.size} items")
+    }
+
+    private fun removeFilterValue(filter: String) {
+        activeDorms = activeDorms.filterNot { it == filter }
+        activeCategories = activeCategories.filterNot { it == filter }
+        activeConditions = activeConditions.filterNot { it == filter }
+
+        if (filter.startsWith("Цена от")) minPriceFilter = null
+        if (filter.startsWith("Цена до")) maxPriceFilter = null
+
+        val remaining = mutableListOf<String>()
+        remaining.addAll(activeDorms)
+        remaining.addAll(activeCategories)
+        remaining.addAll(activeConditions)
+
+        if (minPriceFilter != null) remaining.add("Цена от $minPriceFilter")
+        if (maxPriceFilter != null) remaining.add("Цена до $maxPriceFilter")
+
+        filterChipAdapter.updateFilters(remaining)
+        updateFilterChipsVisibility()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 1001 && resultCode == Activity.RESULT_OK && data != null) {
+
+            activeDorms = data.getStringArrayExtra("DORMS")?.toList() ?: emptyList()
+            activeCategories = data.getStringArrayExtra("CATEGORIES")?.toList() ?: emptyList()
+            activeConditions = data.getStringArrayExtra("CONDITIONS")?.toList() ?: emptyList()
+
+            minPriceFilter = data.getStringExtra("MIN_PRICE")?.toIntOrNull()
+            maxPriceFilter = data.getStringExtra("MAX_PRICE")?.toIntOrNull()
+
+            val allFilters = mutableListOf<String>()
+            allFilters.addAll(activeDorms)
+            allFilters.addAll(activeCategories)
+            allFilters.addAll(activeConditions)
+
+            if (minPriceFilter != null) allFilters.add("Цена от $minPriceFilter")
+            if (maxPriceFilter != null) allFilters.add("Цена до $maxPriceFilter")
+
+            filterChipAdapter.updateFilters(allFilters)
+            updateFilterChipsVisibility()
+
+            performSearch("")
+        }
     }
 
     override fun onDestroy() {
-        searchHandler.removeCallbacks(searchRunnable)
         super.onDestroy()
+        searchHandler.removeCallbacks(searchRunnable)
     }
 
     override fun onResume() {

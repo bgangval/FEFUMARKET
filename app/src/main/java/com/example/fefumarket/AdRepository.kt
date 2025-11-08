@@ -9,6 +9,8 @@ object AdRepository {
             dorm = "Корпус 8",
             seller = "Иван",
             description = "Новый, i7, 16GB RAM",
+            category = "Техника",
+            condition = "Новое",
             imageResId = R.drawable.laptop_ic_test
         ),
         Ad(
@@ -17,6 +19,8 @@ object AdRepository {
             dorm = "Корпус 5",
             seller = "Мария",
             description = "В отличном состоянии, 128GB",
+            category = "Техника",
+            condition = "Б/у",
             imageResId = R.drawable.iphone_ic_test
         ),
         Ad(
@@ -25,6 +29,8 @@ object AdRepository {
             dorm = "Корпус 3",
             seller = "Олег",
             description = "Размер 42, оригинал",
+            category = "Обувь",
+            condition = "Б/у",
             imageResId = R.drawable.nike_ic_test
         ),
         Ad(
@@ -33,6 +39,8 @@ object AdRepository {
             dorm = "Корпус 4",
             seller = "Анна",
             description = "27 дюймов, 4K",
+            category = "Техника",
+            condition = "Б/у",
             imageResId = R.drawable.monitor_ic_test
         ),
         Ad(
@@ -41,6 +49,8 @@ object AdRepository {
             dorm = "Корпус 2",
             seller = "Виктор",
             description = "Беспроводные, шумоподавление",
+            category = "Техника",
+            condition = "Б/у",
             imageResId = R.drawable.sony_ic_test
         ),
         Ad(
@@ -48,7 +58,9 @@ object AdRepository {
             price = "₽25,000",
             dorm = "Корпус 6",
             seller = "Петр",
-            description = "Горный, 21 скорость",
+            description = "Горный велосипед, 21 скорость",
+            category = "Барахло",
+            condition = "Б/у",
             imageResId = R.drawable.bike_ic_test
         ),
         Ad(
@@ -57,6 +69,8 @@ object AdRepository {
             dorm = "Корпус 1",
             seller = "Елена",
             description = "Kotlin для начинающих",
+            category = "Для учебы",
+            condition = "Новое",
             imageResId = R.drawable.book_ic_test
         ),
         Ad(
@@ -65,6 +79,8 @@ object AdRepository {
             dorm = "Корпус 7",
             seller = "Дмитрий",
             description = "Кварцевые, водонепроницаемые",
+            category = "Техника",
+            condition = "Б/у",
             imageResId = R.drawable.watch_ic_test
         )
     )
