@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import android.view.View
+import com.example.fefumarket.ui.ui.auth.LoginActivity
 
 class LoadingActivity : AppCompatActivity() {
 

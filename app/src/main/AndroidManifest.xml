@@ -10,31 +10,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
         <activity
-            android:name=".EditPostActivity"
+            android:name=".ad.EditPostActivity"
             android:exported="false" />
         <activity
-            android:name=".AddPostActivity"
+            android:name=".ad.AddPostActivity"
             android:exported="false" />
         <activity
-            android:name=".MyPostsActivity"
+            android:name=".ad.MyPostsActivity"
             android:exported="false" />
         <activity
             android:name=".ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".FiltersActivity"
+            android:name=".home.FiltersActivity"
             android:exported="false" /> <!-- Экран сообщений -->
         <activity
-            android:name=".MessageActivity"
+            android:name=".chat.MessageActivity"
             android:exported="false" /> <!-- Экран чата -->
         <activity
             android:name=".ChatActivity"
             android:exported="false" /> <!-- Избранное -->
         <activity
-            android:name=".FavoritesActivity"
+            android:name=".favorites.FavoritesActivity"
             android:exported="false" /> <!-- Детали объявления с поддержкой App Link -->
         <activity
-            android:name=".AdDetailActivity"
+            android:name=".ad.AdDetailActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -49,7 +49,7 @@
             </intent-filter>
         </activity> <!-- Главная страница -->
         <activity
-            android:name=".HomeActivity"
+            android:name=".home.HomeActivity"
             android:exported="false" /> <!-- Экран загрузки -->
         <activity
             android:name=".LoadingActivity"
@@ -62,16 +62,16 @@
             </intent-filter>
         </activity> <!-- Экран регистрации / входа -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.ui.auth.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".EmailInputActivity"
+            android:name=".ui.ui.auth.EmailInputActivity"
             android:exported="false" />
         <activity
-            android:name=".CodeVerificationActivity"
+            android:name=".ui.ui.auth.CodeVerificationActivity"
             android:exported="false" />
         <activity
-            android:name=".PasswordCreationActivity"
+            android:name=".ui.ui.auth.PasswordCreationActivity"
             android:exported="false" />
     </application>
 

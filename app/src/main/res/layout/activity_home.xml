@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg"
     android:fitsSystemWindows="false"
-    tools:context=".HomeActivity">
+    tools:context=".home.HomeActivity">
 
     <!-- Верхняя панель -->
     <com.google.android.material.appbar.AppBarLayout
