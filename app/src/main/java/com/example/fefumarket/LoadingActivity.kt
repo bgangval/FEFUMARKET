@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import com.example.fefumarket.ui.auth.LoginActivity
 
 class LoadingActivity : AppCompatActivity() {
 
