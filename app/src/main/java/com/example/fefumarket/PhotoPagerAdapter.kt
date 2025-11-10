@@ -1,13 +1,15 @@
 package com.example.fefumarket
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
 class PhotoPagerAdapter(
-    private val photos: List<Int>
+    private val photos: List<Uri>
 ) : RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
 
     inner class PhotoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -21,7 +23,10 @@ class PhotoPagerAdapter(
     }
 
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
-        holder.image.setImageResource(photos[position])
+        Glide.with(holder.image.context)
+            .load(photos[position])
+            .centerCrop()
+            .into(holder.image)
     }
 
     override fun getItemCount(): Int = photos.size

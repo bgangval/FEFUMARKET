@@ -27,11 +27,11 @@ class MessageActivity : AppCompatActivity() {
         // ==== Получаем данные из Intent ====
         val sellerName = intent.getStringExtra("SELLER_NAME") ?: "Продавец"
         val productName = intent.getStringExtra("PRODUCT_NAME") ?: "Товар"
-        val avatarId = intent.getIntExtra("AVATAR_ID", 0)
-        chatId = intent.getStringExtra("CHAT_ID") ?: "${productName}_$sellerName"
+        val avatarUri = intent.getStringExtra("AVATAR_URI") ?: ""  // теперь строка
+        chatId = intent.getStringExtra("CHAT_ID") ?: "${sellerName}_$productName"
 
         // ==== Получаем или создаём чат ====
-        chat = MessagesManager.getOrCreateChat(chatId, sellerName, productName, avatarId)
+        chat = MessagesManager.getOrCreateChat(chatId, sellerName, productName, avatarUri)
 
         // ==== Устанавливаем имя и товар в шапку ====
         findViewById<TextView>(R.id.chatTitle).text = sellerName

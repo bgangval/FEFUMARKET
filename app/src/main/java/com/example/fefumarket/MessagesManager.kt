@@ -6,9 +6,19 @@ object MessagesManager {
 
     fun getAllChats(): List<ChatItem> = chats.values.toList()
 
-    fun getOrCreateChat(chatId: String, sellerName: String, productName: String, avatarResId: Int): ChatItem {
+    fun getOrCreateChat(
+        chatId: String,
+        sellerName: String,
+        productName: String,
+        avatarUri: String
+    ): ChatItem {
         return chats.getOrPut(chatId) {
-            ChatItem(sellerName, productName, "", avatarResId)
+            ChatItem(
+                sellerName = sellerName,
+                productName = productName,
+                lastMessage = "",
+                avatarUri = avatarUri // теперь строка
+            )
         }
     }
 

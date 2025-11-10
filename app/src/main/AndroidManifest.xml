@@ -10,9 +10,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
         <activity
-            android:name=".FiltersActivity"
+            android:name=".EditPostActivity"
             android:exported="false" />
-        <!-- Экран сообщений -->
+        <activity
+            android:name=".AddPostActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MyPostsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FiltersActivity"
+            android:exported="false" /> <!-- Экран сообщений -->
         <activity
             android:name=".MessageActivity"
             android:exported="false" /> <!-- Экран чата -->

@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
 class ChatAdapter(val chats: MutableList<ChatItem>) :
     RecyclerView.Adapter<ChatAdapter.ChatViewHolder>() {
@@ -27,13 +29,21 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
 
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
         val chat = chats[position]
-        holder.avatar.setImageResource(chat.avatarResId)
+
+        // ✅ Загружаем avatarUri в ImageView
+        Glide.with(holder.itemView.context)
+            .load(chat.avatarUri.toUri())
+            .placeholder(R.drawable.ic_camera)
+            .centerCrop()
+            .into(holder.avatar)
+
         holder.name.text = chat.sellerName
         holder.product.text = chat.productName
         holder.lastMessage.text = chat.lastMessage
 
-        // Установим правильный ресурс иконки и прозрачность 0 если нужно анимировать
-        holder.muteIcon.setImageResource(if (chat.isMuted) R.drawable.ic_mute else R.drawable.ic_unmute)
+        holder.muteIcon.setImageResource(
+            if (chat.isMuted) R.drawable.ic_mute else R.drawable.ic_unmute
+        )
         holder.muteIcon.alpha = if (chat.isMuted) 1f else 0f
         holder.muteIcon.visibility = View.VISIBLE
 
@@ -43,7 +53,7 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
                 putExtra("CHAT_ID", "${chat.sellerName}_${chat.productName}")
                 putExtra("SELLER_NAME", chat.sellerName)
                 putExtra("PRODUCT_NAME", chat.productName)
-                putExtra("AVATAR_ID", chat.avatarResId)
+                putExtra("AVATAR_URI", chat.avatarUri)
             }
             context.startActivity(intent)
         }
@@ -60,7 +70,6 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
         val chat = chats[position]
         chat.isMuted = !chat.isMuted
 
-        // Анимация плавного появления/исчезновения иконки
         val holder = recyclerView?.findViewHolderForAdapterPosition(position) as? ChatViewHolder
         holder?.let {
             val startAlpha = if (chat.isMuted) 0f else 1f

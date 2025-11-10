@@ -6,18 +6,18 @@
     android:layout_height="match_parent"
     android:background="@color/bg">
 
-        <!-- Верхний бар -->
-        <LinearLayout
-            android:id="@+id/topBar"
-            android:layout_width="match_parent"
-            android:layout_height="110dp"
-            android:orientation="horizontal"
-            android:paddingTop="40dp"
-            android:paddingHorizontal="16dp"
-            android:gravity="center_vertical"
-            android:background="@color/bottom_bar_bg"
-            android:elevation="4dp"
-            android:layout_gravity="top">
+    <!-- Верхний бар -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:orientation="horizontal"
+        android:paddingTop="40dp"
+        android:paddingHorizontal="16dp"
+        android:gravity="center_vertical"
+        android:background="@color/bottom_bar_bg"
+        android:elevation="4dp"
+        android:layout_gravity="top">
 
         <!-- Кнопка "Назад" -->
         <ImageButton
@@ -56,120 +56,222 @@
             android:contentDescription="@string/write"
             android:scaleType="centerInside"
             app:tint="@color/white" />
-        </LinearLayout>
+    </LinearLayout>
 
-        <!-- Основная зона с прокруткой -->
-        <ScrollView
-            android:id="@+id/scrollView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="110dp"
-            android:clipToPadding="false"
-            android:paddingBottom="90dp">
+    <!-- Основная зона с прокруткой -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="110dp"
+        android:clipToPadding="false"
+        android:paddingBottom="90dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp">
 
-        <!-- Фото -->
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/photoPager"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintDimensionRatio="1:1"
-            android:background="@color/light_gray" />
+            <!-- Фото -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/photoPager"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
+                android:background="@color/light_gray" />
 
-        <!-- Название -->
-        <TextView
-            android:id="@+id/titleText"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:gravity="center_vertical"
-            android:text="@string/sample_title"
-            android:textColor="@color/text_white"
-            android:textSize="18sp"
-            android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/dark_rounded_field"
-            app:layout_constraintTop_toBottomOf="@id/photoPager"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Подпись "Название товара" -->
+            <TextView
+                android:id="@+id/labelTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Название товара"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/photoPager"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="12dp"/>
 
-        <!-- Цена -->
-        <TextView
-            android:id="@+id/priceText"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:gravity="center_vertical"
-            android:text="@string/sample_price"
-            android:textColor="@color/text_white"
-            android:textSize="18sp"
-            android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/dark_rounded_field"
-            app:layout_constraintTop_toBottomOf="@id/titleText"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Название товара -->
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:text="@string/sample_title"
+                android:textColor="@color/text_white"
+                android:textSize="18sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field"
+                app:layout_constraintTop_toBottomOf="@id/labelTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Общежитие -->
-        <TextView
-            android:id="@+id/dormText"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:gravity="center_vertical"
-            android:text="@string/sample_dorm"
-            android:textColor="@color/text_white"
-            android:textSize="16sp"
-            android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/dark_rounded_field"
-            app:layout_constraintTop_toBottomOf="@id/priceText"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <!-- Подпись "Цена" -->
+            <TextView
+                android:id="@+id/labelPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Цена"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/titleText"
+                app:layout_constraintStart_toStartOf="@id/titleText"
+                android:layout_marginTop="12dp"/>
 
-        <!-- Заголовок описания -->
-        <TextView
-            android:id="@+id/descTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/description"
-            android:textColor="@color/text_white"
-            android:textSize="18sp"
-            android:fontFamily="@font/montserrat_regular"
-            android:textStyle="bold"
-            android:layout_marginTop="14dp"
-            app:layout_constraintTop_toBottomOf="@id/dormText"
-            app:layout_constraintStart_toStartOf="parent" />
+            <!-- Цена -->
+            <TextView
+                android:id="@+id/priceText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:text="@string/sample_price"
+                android:textColor="@color/text_white"
+                android:textSize="18sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field"
+                app:layout_constraintTop_toBottomOf="@id/labelPrice"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Описание -->
-        <TextView
-            android:id="@+id/descriptionText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:padding="12dp"
-            android:text="@string/sample_description"
-            android:textColor="@color/text_white"
-            android:textSize="14sp"
-            android:fontFamily="@font/montserrat_regular"
-            android:background="@drawable/dark_rounded_field_large"
-            android:lineSpacingExtra="4dp"
-            app:layout_constraintTop_toBottomOf="@id/descTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-        </ScrollView>
+            <!-- Подпись "Описание" -->
+            <TextView
+                android:id="@+id/labelDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Описание"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/priceText"
+                app:layout_constraintStart_toStartOf="@id/priceText"
+                android:layout_marginTop="12dp"/>
 
+            <!-- Описание -->
+            <TextView
+                android:id="@+id/descriptionText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:padding="12dp"
+                android:text="@string/sample_description"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field_large"
+                android:lineSpacingExtra="4dp"
+                app:layout_constraintTop_toBottomOf="@id/labelDescription"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Подпись "Корпус" -->
+            <TextView
+                android:id="@+id/labelDorm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Корпус"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/descriptionText"
+                app:layout_constraintStart_toStartOf="@id/descriptionText"
+                android:layout_marginTop="12dp"/>
+
+            <!-- Корпус -->
+            <TextView
+                android:id="@+id/dormText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:text="@string/sample_dorm"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field"
+                app:layout_constraintTop_toBottomOf="@id/labelDorm"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Подпись "Категория" -->
+            <TextView
+                android:id="@+id/labelCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Категория"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/dormText"
+                app:layout_constraintStart_toStartOf="@id/dormText"
+                android:layout_marginTop="12dp"/>
+
+            <!-- Категория -->
+            <TextView
+                android:id="@+id/categoryText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:text="@string/sample_category"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field"
+                app:layout_constraintTop_toBottomOf="@id/labelCategory"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Подпись "Состояние" -->
+            <TextView
+                android:id="@+id/labelCondition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Состояние"
+                android:textColor="@color/text_white"
+                android:textSize="14sp"
+                android:fontFamily="@font/montserrat_regular"
+                app:layout_constraintTop_toBottomOf="@id/categoryText"
+                app:layout_constraintStart_toStartOf="@id/categoryText"
+                android:layout_marginTop="12dp"/>
+
+            <!-- Состояние -->
+            <TextView
+                android:id="@+id/conditionText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:gravity="center_vertical"
+                android:text="@string/sample_condition"
+                android:textColor="@color/text_white"
+                android:textSize="16sp"
+                android:fontFamily="@font/montserrat_regular"
+                android:background="@drawable/dark_rounded_field"
+                app:layout_constraintTop_toBottomOf="@id/labelCondition"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <!-- Фиксированная кнопка "Контакт" и "В избранное" -->
     <LinearLayout
         android:id="@+id/fixedButtons"
         android:layout_width="match_parent"
@@ -208,4 +310,5 @@
             android:layout_marginStart="8dp"
             app:cornerRadius="24dp" />
     </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

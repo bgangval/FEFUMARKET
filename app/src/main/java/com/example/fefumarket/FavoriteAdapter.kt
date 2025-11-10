@@ -8,13 +8,12 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
-// Адаптер для RecyclerView, показывающего избранные товары
 class FavoriteAdapter(
     val items: MutableList<Ad>
 ) : RecyclerView.Adapter<FavoriteAdapter.ViewHolder>() {
 
-    // ViewHolder — хранит ссылки на элементы макета item_favorite.xml
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val itemImage: ImageView = view.findViewById(R.id.itemImage)
         val itemTitle: TextView = view.findViewById(R.id.itemTitle)
@@ -33,34 +32,34 @@ class FavoriteAdapter(
 
         holder.itemTitle.text = item.title
         holder.itemDescription.text = item.price
-        holder.itemImage.setImageResource(item.imageResId)
 
-        // Устанавливаем красное сердечко, так как товар в избранном
+        // ✅ Загружаем первое фото, если оно есть
+        if (item.imageUris.isNotEmpty()) {
+            Glide.with(holder.itemImage.context)
+                .load(item.imageUris[0])   // первое фото
+                .centerCrop()
+                .into(holder.itemImage)
+        } else {
+            holder.itemImage.setImageResource(R.drawable.ic_camera) // заглушка
+        }
+
         holder.btnRemoveFavorite.setImageResource(R.drawable.ic_heart_red)
 
-        // Удаление элемента по кнопке
         holder.btnRemoveFavorite.setOnClickListener {
-            val ad = items[position]
-            FavoritesManager.remove(ad)
+            FavoritesManager.remove(item)
             removeItem(position)
         }
 
-        // Открытие деталей по клику на элемент
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, AdDetailActivity::class.java)
-            intent.putExtra("title", item.title)
-            intent.putExtra("price", item.price)
-            intent.putExtra("seller", item.seller)
-            intent.putExtra("description", item.description)
-            intent.putExtra("imageResId", item.imageResId)
+            intent.putExtra("AD_ID", item.id)
             context.startActivity(intent)
         }
     }
 
     override fun getItemCount(): Int = items.size
 
-    // Удаление элемента из списка
     private fun removeItem(position: Int) {
         items.removeAt(position)
         notifyItemRemoved(position)

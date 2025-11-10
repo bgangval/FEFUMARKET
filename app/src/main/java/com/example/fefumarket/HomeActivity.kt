@@ -1,8 +1,8 @@
 package com.example.fefumarket
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.PorterDuff
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,9 +12,11 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -37,13 +39,42 @@ class HomeActivity : AppCompatActivity() {
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
 
+    private val filtersLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                val data = result.data!!
+                activeDorms = data.getStringArrayExtra("DORMS")?.toList() ?: emptyList()
+                activeCategories = data.getStringArrayExtra("CATEGORIES")?.toList() ?: emptyList()
+                activeConditions = data.getStringArrayExtra("CONDITIONS")?.toList() ?: emptyList()
+                minPriceFilter = data.getStringExtra("MIN_PRICE")?.toIntOrNull()
+                maxPriceFilter = data.getStringExtra("MAX_PRICE")?.toIntOrNull()
+
+                val allFilters = mutableListOf<String>()
+                allFilters.addAll(activeDorms)
+                allFilters.addAll(activeCategories)
+                allFilters.addAll(activeConditions)
+                minPriceFilter?.let { allFilters.add("Цена от $it") }
+                maxPriceFilter?.let { allFilters.add("Цена до $it") }
+
+                filterChipAdapter.updateFilters(allFilters)
+                updateFilterChipsVisibility()
+                performSearch("")
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false)
+        val session = SessionManager(this)
+        if (session.getLogin() == null) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
         }
+
+        // Современный способ
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         initFilterChips()
         initRecyclerView()
@@ -60,21 +91,12 @@ class HomeActivity : AppCompatActivity() {
                 putExtra("MIN_PRICE", minPriceFilter?.toString())
                 putExtra("MAX_PRICE", maxPriceFilter?.toString())
             }
-            startActivityForResult(intent, 1001)
-        }
-    }
-
-    // ---------- управление видимостью чипсов ----------
-    private fun updateFilterChipsVisibility() {
-        filtersRecyclerView.post {
-            filtersRecyclerView.visibility =
-                if (filterChipAdapter.itemCount > 0) View.VISIBLE else View.GONE
+            filtersLauncher.launch(intent)
         }
     }
 
     private fun initFilterChips() {
         filtersRecyclerView = findViewById(R.id.filtersRecyclerView)
-
         filterChipAdapter = FilterChipAdapter(
             mutableListOf(),
             onRemove = { removed ->
@@ -83,12 +105,17 @@ class HomeActivity : AppCompatActivity() {
             },
             onListChanged = { updateFilterChipsVisibility() }
         )
-
         filtersRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         filtersRecyclerView.adapter = filterChipAdapter
-
         updateFilterChipsVisibility()
+    }
+
+    private fun updateFilterChipsVisibility() {
+        filtersRecyclerView.post {
+            filtersRecyclerView.visibility =
+                if (filterChipAdapter.itemCount > 0) View.VISIBLE else View.GONE
+        }
     }
 
     private fun initRecyclerView() {
@@ -96,7 +123,7 @@ class HomeActivity : AppCompatActivity() {
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(20)
-        adAdapter = AdAdapter(emptyList())
+        adAdapter = AdAdapter(AdRepository.ads.toMutableList()) // MutableList
         recyclerView.adapter = adAdapter
     }
 
@@ -111,25 +138,30 @@ class HomeActivity : AppCompatActivity() {
                     startActivity(intent)
                     true
                 }
-                R.id.nav_add -> { showToast("Публикация"); true }
+                R.id.nav_add -> {
+                    val intent = Intent(this, MyPostsActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    true
+                }
                 R.id.nav_chat -> {
                     val intent = Intent(this, ChatActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     startActivity(intent)
                     true
                 }
-                R.id.nav_profile -> { showToast("Профиль"); true }
+                R.id.nav_profile -> {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    true
+                }
                 else -> false
             }
         }
         bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_home }
     }
 
-    private fun showToast(text: String) {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
-    }
-
-    // ---------- поиск ----------
     private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
         searchView.isIconified = false
@@ -139,10 +171,12 @@ class HomeActivity : AppCompatActivity() {
         val color = ContextCompat.getColor(this, R.color.search_icon_color)
 
         searchView.post {
-            val searchIcon = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
+            val searchIcon =
+                searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
             searchIcon?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
 
-            val searchEditText = searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
+            val searchEditText =
+                searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
             searchEditText?.apply {
                 setTextColor(color)
                 setHintTextColor(color)
@@ -152,7 +186,8 @@ class HomeActivity : AppCompatActivity() {
                 isCursorVisible = true
             }
 
-            val closeButton = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+            val closeButton =
+                searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
             closeButton?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
 
@@ -170,9 +205,8 @@ class HomeActivity : AppCompatActivity() {
         })
     }
 
-    // ---------- фильтрация ----------
     private fun performSearch(query: String) {
-        var result = AdRepository.ads
+        var result = AdRepository.ads.toMutableList() // MutableList
 
         if (query.isNotEmpty()) {
             result = result.filter { ad ->
@@ -180,23 +214,25 @@ class HomeActivity : AppCompatActivity() {
                         ad.seller.contains(query, ignoreCase = true) ||
                         ad.description.contains(query, ignoreCase = true) ||
                         ad.price.contains(query, ignoreCase = true)
-            }
+            }.toMutableList()
         }
 
-        if (activeDorms.isNotEmpty()) result = result.filter { ad -> activeDorms.contains(ad.dorm) }
-        if (activeCategories.isNotEmpty()) result = result.filter { ad -> activeCategories.contains(ad.category) }
-        if (activeConditions.isNotEmpty()) result = result.filter { ad -> activeConditions.contains(ad.condition) }
+        if (activeDorms.isNotEmpty())
+            result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
+        if (activeCategories.isNotEmpty())
+            result = result.filter { ad -> activeCategories.contains(ad.category) }.toMutableList()
+        if (activeConditions.isNotEmpty())
+            result = result.filter { ad -> activeConditions.contains(ad.condition) }.toMutableList()
 
-        // фильтрация по цене (убираем все нецифровые символы)
         result = result.filter { ad ->
             val priceValue = ad.price.replace(Regex("[^\\d]"), "").toIntOrNull() ?: 0
             val minOk = minPriceFilter?.let { priceValue >= it } ?: true
             val maxOk = maxPriceFilter?.let { priceValue <= it } ?: true
             minOk && maxOk
-        }
+        }.toMutableList()
 
         adAdapter.updateAds(result)
-        updateFilterChipsVisibility() // обновляем видимость блока после фильтрации
+        updateFilterChipsVisibility()
 
         if (result.isEmpty()) {
             Toast.makeText(this, "Нет результатов", Toast.LENGTH_SHORT).show()
@@ -217,39 +253,11 @@ class HomeActivity : AppCompatActivity() {
         remaining.addAll(activeDorms)
         remaining.addAll(activeCategories)
         remaining.addAll(activeConditions)
-
-        if (minPriceFilter != null) remaining.add("Цена от $minPriceFilter")
-        if (maxPriceFilter != null) remaining.add("Цена до $maxPriceFilter")
+        minPriceFilter?.let { remaining.add("Цена от $it") }
+        maxPriceFilter?.let { remaining.add("Цена до $it") }
 
         filterChipAdapter.updateFilters(remaining)
         updateFilterChipsVisibility()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == 1001 && resultCode == Activity.RESULT_OK && data != null) {
-
-            activeDorms = data.getStringArrayExtra("DORMS")?.toList() ?: emptyList()
-            activeCategories = data.getStringArrayExtra("CATEGORIES")?.toList() ?: emptyList()
-            activeConditions = data.getStringArrayExtra("CONDITIONS")?.toList() ?: emptyList()
-
-            minPriceFilter = data.getStringExtra("MIN_PRICE")?.toIntOrNull()
-            maxPriceFilter = data.getStringExtra("MAX_PRICE")?.toIntOrNull()
-
-            val allFilters = mutableListOf<String>()
-            allFilters.addAll(activeDorms)
-            allFilters.addAll(activeCategories)
-            allFilters.addAll(activeConditions)
-
-            if (minPriceFilter != null) allFilters.add("Цена от $minPriceFilter")
-            if (maxPriceFilter != null) allFilters.add("Цена до $maxPriceFilter")
-
-            filterChipAdapter.updateFilters(allFilters)
-            updateFilterChipsVisibility()
-
-            performSearch("")
-        }
     }
 
     override fun onDestroy() {
@@ -261,5 +269,6 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         bottomNavigation.selectedItemId = R.id.nav_home
+        adAdapter.updateAds(AdRepository.ads.toMutableList()) // обновляем при возвращении
     }
 }

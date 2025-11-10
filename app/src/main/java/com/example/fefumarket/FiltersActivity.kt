@@ -27,11 +27,22 @@ class FiltersActivity : AppCompatActivity() {
     )
 
     private val categories = listOf(
-        "Любая", "Одежда", "Обувь", "Техника", "Бьюти",
-        "Еда", "Для учебы", "Мебель", "Барахло"
+        "Любая",
+        "Одежда",
+        "Обувь",
+        "Техника",
+        "Бьюти",
+        "Еда",
+        "Для учебы",
+        "Мебель",
+        "Барахло"
     )
 
-    private val conditions = listOf("Любое", "Б/у", "Новое")
+    private val conditions = listOf(
+        "Новое",
+        "Б/у",
+        "Любое"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
