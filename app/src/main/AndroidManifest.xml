@@ -62,16 +62,16 @@
             </intent-filter>
         </activity> <!-- Экран регистрации / входа -->
         <activity
-            android:name=".ui.ui.auth.LoginActivity"
+            android:name=".LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ui.auth.EmailInputActivity"
+            android:name=".EmailInputActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ui.auth.CodeVerificationActivity"
+            android:name=".CodeVerificationActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.ui.auth.PasswordCreationActivity"
+            android:name=".PasswordCreationActivity"
             android:exported="false" />
     </application>
 
