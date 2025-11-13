@@ -35,11 +35,6 @@ class FavoritesActivity : AppCompatActivity() {
         setupBottomNavigation()
     }
 
-    override fun onResume() {
-        super.onResume()
-        updateFavoritesList()
-    }
-
     private fun updateFavoritesList() {
         val favoriteList = FavoritesManager.getAll().toMutableList()
         adapter.items.clear()
@@ -81,5 +76,11 @@ class FavoritesActivity : AppCompatActivity() {
             }
         }
         bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_favorites }
+    }
+    override fun onResume() {
+        super.onResume()
+        updateFavoritesList()
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigationFavorites)  // Обратите внимание: здесь ID R.id.bottomNavigationFavorites, а не standard
+        bottomNavigation.selectedItemId = R.id.nav_favorites
     }
 }

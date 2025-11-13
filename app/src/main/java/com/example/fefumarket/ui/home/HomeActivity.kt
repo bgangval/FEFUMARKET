@@ -213,8 +213,9 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun performSearch(query: String) {
-        var result = AdRepository.ads.toMutableList() // MutableList
+        var result = AdRepository.ads.toMutableList()
 
+        // Фильтрация по поиску
         if (query.isNotEmpty()) {
             result = result.filter { ad ->
                 ad.title.contains(query, ignoreCase = true) ||
@@ -224,13 +225,19 @@ class HomeActivity : AppCompatActivity() {
             }.toMutableList()
         }
 
+        // Фильтрация по корпусам
         if (activeDorms.isNotEmpty())
             result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
+
+        // Фильтрация по категориям
         if (activeCategories.isNotEmpty())
             result = result.filter { ad -> activeCategories.contains(ad.category) }.toMutableList()
+
+        // Фильтрация по состоянию
         if (activeConditions.isNotEmpty())
             result = result.filter { ad -> activeConditions.contains(ad.condition) }.toMutableList()
 
+        // Фильтрация по цене
         result = result.filter { ad ->
             val priceValue = ad.price.replace(Regex("[^\\d]"), "").toIntOrNull() ?: 0
             val minOk = minPriceFilter?.let { priceValue >= it } ?: true
@@ -240,12 +247,6 @@ class HomeActivity : AppCompatActivity() {
 
         adAdapter.updateAds(result)
         updateFilterChipsVisibility()
-
-        if (result.isEmpty()) {
-            Toast.makeText(this, "Нет результатов", Toast.LENGTH_SHORT).show()
-        }
-
-        Log.d("HomeActivity", "Filtered: ${result.size} items")
     }
 
     private fun removeFilterValue(filter: String) {
@@ -276,6 +277,8 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         bottomNavigation.selectedItemId = R.id.nav_home
-        adAdapter.updateAds(AdRepository.ads.toMutableList()) // обновляем при возвращении
+
+        val searchView = findViewById<SearchView>(R.id.searchView)
+        performSearch(searchView.query.toString())
     }
 }

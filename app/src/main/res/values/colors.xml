@@ -21,4 +21,5 @@
     <color name="message_user_bg">#488CDA</color>
     <color name="message_other_bg">#D5D5D5</color>
     <color name="red">#D32F2F</color>
+    <color name="primary">#1976D2</color>
 </resources>

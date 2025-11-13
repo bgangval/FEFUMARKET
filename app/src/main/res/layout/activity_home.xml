@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg"
     android:fitsSystemWindows="false"
-    tools:context=".home.HomeActivity">
+    tools:context="ui.home.HomeActivity">
 
     <!-- Верхняя панель -->
     <com.google.android.material.appbar.AppBarLayout
@@ -107,10 +107,11 @@
         android:layout_gravity="bottom"
         android:background="@color/bottom_bar_bg"
         android:fitsSystemWindows="true"
+        android:paddingBottom="0dp"
+        android:layout_marginBottom="0dp"
         app:itemIconTint="@color/nav_item_color"
         app:itemTextColor="@color/nav_item_color"
         app:menu="@menu/bottom_nav_menu"
-        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
         android:elevation="8dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -100,5 +100,7 @@ class MyPostsActivity : AppCompatActivity() {
         adapter.updateList(
             AdRepository.getMyAds(currentUser).toMutableList()
         )
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        bottomNavigation.selectedItemId = R.id.nav_add
     }
 }

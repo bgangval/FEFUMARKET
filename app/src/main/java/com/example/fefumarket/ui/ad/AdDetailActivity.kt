@@ -29,6 +29,8 @@ class AdDetailActivity : AppCompatActivity() {
     private lateinit var adPrice: TextView
     private lateinit var adDorm: TextView
     private lateinit var adDescription: TextView
+    private lateinit var adCategory: TextView
+    private lateinit var adCondition: TextView
     private lateinit var btnFavoriteTop: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +44,8 @@ class AdDetailActivity : AppCompatActivity() {
         adDorm = findViewById(R.id.dormText)
         adDescription = findViewById(R.id.descriptionText)
         btnFavoriteTop = findViewById(R.id.btnFavoriteTop)
+        adCategory = findViewById(R.id.categoryText)
+        adCondition = findViewById(R.id.conditionText)
 
         val btnBack: ImageButton = findViewById(R.id.btnBack)
         val btnFavorite: Button = findViewById(R.id.favoriteButton)
@@ -111,6 +115,8 @@ class AdDetailActivity : AppCompatActivity() {
         adPrice.text = ad.price
         adDorm.text = ad.dorm
         adDescription.text = ad.description
+        adCategory.text = ad.category
+        adCondition.text = ad.condition
 
         val photos: List<Uri> =
             if (ad.imageUris.isNotEmpty())
@@ -145,7 +151,7 @@ class AdDetailActivity : AppCompatActivity() {
     private fun shareAd() {
         val deepLink = Uri.parse("fefumarket://ad/${ad.id}")
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            Intent.setType = "text/plain"
+            type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, "Смотри объявление: $deepLink")
         }
         startActivity(Intent.createChooser(sendIntent, "Поделиться объявлением"))

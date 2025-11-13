@@ -80,4 +80,20 @@
     <string name="ad_photo">Фото товара</string>
     <string name="change_photo">Изменить фото</string>
 
+    <!-- Создание объявления -->
+    <string name="new_post_title">Новое объявление</string>
+    <string name="cd_back">Назад</string>
+    <string name="cd_add_photo">Добавить фото</string>
+    <string name="label_title">Название товара</string>
+    <string name="hint_title">Введите название</string>
+    <string name="label_price">Цена (₽)</string>
+    <string name="hint_price">Введите цену</string>
+    <string name="label_dorm">Корпус</string>
+    <string name="label_category">Категория</string>
+    <string name="label_condition">Состояние</string>
+    <string name="label_description">Описание</string>
+    <string name="hint_description">Добавьте описание...</string>
+    <string name="publish">Опубликовать</string>
+    <string name="add_photo">Добавить фото</string>
+
 </resources>

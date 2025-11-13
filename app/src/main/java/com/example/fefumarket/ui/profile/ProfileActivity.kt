@@ -198,4 +198,9 @@ class ProfileActivity : AppCompatActivity() {
         }
         bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_profile }
     }
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+        bottomNavigation.selectedItemId = R.id.nav_profile
+    }
 }

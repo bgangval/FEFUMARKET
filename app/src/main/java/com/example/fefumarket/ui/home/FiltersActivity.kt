@@ -120,9 +120,12 @@ class FiltersActivity : AppCompatActivity() {
 
         // Кнопка "Применить"
         applyButton.setOnClickListener {
-            val selectedDormNames = dorms.filterIndexed { index, _ -> selectedDorms[index] }
-            val selectedCategoryNames = categories.filterIndexed { index, _ -> selectedCategories[index] }
-            val selectedConditionNames = conditions.filterIndexed { index, _ -> selectedConditions[index] }
+            val selectedDormNames = dorms.filterIndexed { index, dorm ->
+                selectedDorms[index] && dorm != "Любой"
+            }
+            val selectedCategoryNames = categories.filterIndexed { index, cat -> selectedCategories[index] && cat != "Любая" }  // Уже ок
+            val selectedConditionNames = conditions.filterIndexed { index, cond -> selectedConditions[index] && cond != "Любое" }  // Уже ок
+
             val minPrice = minPriceInput.text.toString()
             val maxPrice = maxPriceInput.text.toString()
 

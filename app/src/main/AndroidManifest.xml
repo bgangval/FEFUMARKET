@@ -9,58 +9,57 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
+
+        <!-- Edit / Add / My Posts -->
         <activity
-            android:name=".ad.EditPostActivity"
+            android:name=".ui.ad.EditPostActivity"
             android:exported="false" />
         <activity
-            android:name=".ad.AddPostActivity"
+            android:name=".ui.ad.AddPostActivity"
             android:exported="false" />
         <activity
-            android:name=".ad.MyPostsActivity"
+            android:name=".ui.ad.MyPostsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.profile.ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".home.FiltersActivity"
-            android:exported="false" /> <!-- Экран сообщений -->
-        <activity
-            android:name=".chat.MessageActivity"
-            android:exported="false" /> <!-- Экран чата -->
-        <activity
-            android:name=".ui.chat.ChatActivity"
-            android:exported="false" /> <!-- Избранное -->
-        <activity
-            android:name=".favorites.FavoritesActivity"
-            android:exported="false" /> <!-- Детали объявления с поддержкой App Link -->
-        <activity
-            android:name=".ad.AdDetailActivity"
+            android:name=".ui.ad.AdDetailActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- Схема для открытия приложения напрямую -->
                 <data
                     android:host="ad"
                     android:scheme="fefumarket" />
             </intent-filter>
-        </activity> <!-- Главная страница -->
-        <activity
-            android:name=".home.HomeActivity"
-            android:exported="false" /> <!-- Экран загрузки -->
-        <activity
-            android:name=".LoadingActivity"
-            android:exported="true"
-            android:theme="@style/Theme.FEFUMARKET">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        </activity>
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity> <!-- Экран регистрации / входа -->
+        <!-- Home / Filters -->
+        <activity
+            android:name=".ui.home.HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.home.FiltersActivity"
+            android:exported="false" />
+
+        <!-- Favorites -->
+        <activity
+            android:name=".ui.favorites.FavoritesActivity"
+            android:exported="false" />
+
+        <!-- Chat -->
+        <activity
+            android:name=".ui.chat.ChatActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.chat.MessageActivity"
+            android:exported="false" />
+
+        <!-- Profile -->
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:exported="false" />
+
+        <!-- Auth / Login -->
         <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="false" />
@@ -73,6 +72,18 @@
         <activity
             android:name=".ui.auth.PasswordCreationActivity"
             android:exported="false" />
+
+        <!-- Loading / Launcher -->
+        <activity
+            android:name=".LoadingActivity"
+            android:exported="true"
+            android:theme="@style/Theme.FEFUMARKET">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
