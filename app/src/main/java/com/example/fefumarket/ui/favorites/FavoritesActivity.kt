@@ -43,7 +43,7 @@ class FavoritesActivity : AppCompatActivity() {
     }
 
     private fun setupBottomNavigation() {
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigationFavorites)
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -80,7 +80,7 @@ class FavoritesActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateFavoritesList()
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigationFavorites)  // Обратите внимание: здесь ID R.id.bottomNavigationFavorites, а не standard
+        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         bottomNavigation.selectedItemId = R.id.nav_favorites
     }
 }
