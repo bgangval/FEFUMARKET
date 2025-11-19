@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
+import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.utils.GridSpacingItemDecoration
 import com.example.fefumarket.data.repository.SessionManager
@@ -16,12 +17,11 @@ import com.example.fefumarket.ui.home.HomeActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class MyPostsActivity : AppCompatActivity() {
+class MyPostsActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MyPostsAdapter
     private lateinit var btnAddPost: MaterialButton
-    private lateinit var bottomNavigation: BottomNavigationView
 
     private lateinit var currentUser: String
 
@@ -31,7 +31,6 @@ class MyPostsActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.myPostsRecyclerView)
         btnAddPost = findViewById(R.id.btnAddPost)
-        bottomNavigation = findViewById(R.id.bottomNavigation)
 
         currentUser = SessionManager(this).getUserName() ?: ""
 
@@ -57,50 +56,13 @@ class MyPostsActivity : AppCompatActivity() {
         btnAddPost.setOnClickListener {
             startActivity(Intent(this, AddPostActivity::class.java))
         }
-
-        setupBottomNavigation()
-    }
-
-    private fun setupBottomNavigation() {
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_favorites -> {
-                    val intent = Intent(this, FavoritesActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_add -> true
-                R.id.nav_chat -> {
-                    val intent = Intent(this, ChatActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_profile -> {
-                    val intent = Intent(this, ProfileActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                else -> false
-            }
-        }
-        bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_add }
     }
 
     override fun onResume() {
         super.onResume()
+        setActiveNavItem(R.id.nav_add)
         adapter.updateList(
             AdRepository.getMyAds(currentUser).toMutableList()
         )
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.selectedItemId = R.id.nav_add
     }
 }

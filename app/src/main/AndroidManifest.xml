@@ -9,7 +9,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FEFUMARKET">
-
+        <activity
+            android:name=".ui.base.BaseActivity"
+            android:exported="false" />
         <!-- Edit / Add / My Posts -->
         <activity
             android:name=".ui.ad.EditPostActivity"
@@ -25,41 +27,33 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="ad"
                     android:scheme="fefumarket" />
             </intent-filter>
-        </activity>
-
-        <!-- Home / Filters -->
+        </activity> <!-- Home / Filters -->
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="false" />
         <activity
             android:name=".ui.home.FiltersActivity"
-            android:exported="false" />
-
-        <!-- Favorites -->
+            android:exported="false" /> <!-- Favorites -->
         <activity
             android:name=".ui.favorites.FavoritesActivity"
-            android:exported="false" />
-
-        <!-- Chat -->
+            android:exported="false" /> <!-- Chat -->
         <activity
             android:name=".ui.chat.ChatActivity"
             android:exported="false" />
         <activity
             android:name=".ui.chat.MessageActivity"
-            android:exported="false" />
-
-        <!-- Profile -->
+            android:exported="false" /> <!-- Profile -->
         <activity
             android:name=".ui.profile.ProfileActivity"
-            android:exported="false" />
-
-        <!-- Auth / Login -->
+            android:exported="false" /> <!-- Auth / Login -->
         <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="false" />
@@ -71,19 +65,17 @@
             android:exported="false" />
         <activity
             android:name=".ui.auth.PasswordCreationActivity"
-            android:exported="false" />
-
-        <!-- Loading / Launcher -->
+            android:exported="false" /> <!-- Loading / Launcher -->
         <activity
             android:name=".LoadingActivity"
             android:exported="true"
             android:theme="@style/Theme.FEFUMARKET">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

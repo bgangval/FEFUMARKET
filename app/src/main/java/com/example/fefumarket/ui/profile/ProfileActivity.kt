@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
+import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.ui.ad.MyPostsActivity
 import com.example.fefumarket.ui.auth.LoginActivity
@@ -20,7 +21,7 @@ import com.example.fefumarket.ui.favorites.FavoritesActivity
 import com.example.fefumarket.ui.home.HomeActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class ProfileActivity : AppCompatActivity() {
+class ProfileActivity : BaseActivity() {
 
     private lateinit var session: SessionManager
 
@@ -46,8 +47,6 @@ class ProfileActivity : AppCompatActivity() {
         btnSave = findViewById(R.id.saveButton)
         btnLogout = findViewById(R.id.logoutButton)
         btnDelete = findViewById(R.id.deleteButton)
-
-        setupBottomNavigation()
 
         // Загружаем сохранённые данные
         nameInput.setText(session.getUserName())
@@ -164,43 +163,8 @@ class ProfileActivity : AppCompatActivity() {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
-    private fun setupBottomNavigation() {
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_favorites -> {
-                    val intent = Intent(this, FavoritesActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_add -> {
-                    val intent = Intent(this, MyPostsActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_chat -> {
-                    val intent = Intent(this, ChatActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_profile -> true
-                else -> false
-            }
-        }
-        bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_profile }
-    }
     override fun onResume() {
         super.onResume()
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.selectedItemId = R.id.nav_profile
+        setActiveNavItem(R.id.nav_profile)
     }
 }

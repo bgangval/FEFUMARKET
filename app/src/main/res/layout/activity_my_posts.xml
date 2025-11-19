@@ -53,16 +53,4 @@
         android:fontFamily="@font/montserrat_regular"
         android:backgroundTint="@color/button_blue"
         app:cornerRadius="28dp"/>
-
-    <!-- Нижняя навигация -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="@color/bottom_bar_bg"
-        app:itemIconTint="@color/nav_item_color"
-        app:itemTextColor="@color/nav_item_color"
-        app:menu="@menu/bottom_nav_menu"
-        android:elevation="8dp"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

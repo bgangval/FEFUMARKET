@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
+import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.ui.chat.ChatActivity
@@ -29,7 +30,7 @@ import com.example.fefumarket.ui.ad.MyPostsActivity
 import com.example.fefumarket.ui.profile.ProfileActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adAdapter: AdAdapter
@@ -132,41 +133,6 @@ class HomeActivity : AppCompatActivity() {
         recyclerView.setItemViewCacheSize(20)
         adAdapter = AdAdapter(AdRepository.ads.toMutableList()) // MutableList
         recyclerView.adapter = adAdapter
-    }
-
-    private fun setupBottomNavigation() {
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> true
-                R.id.nav_favorites -> {
-                    val intent = Intent(this, FavoritesActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_add -> {
-                    val intent = Intent(this, MyPostsActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_chat -> {
-                    val intent = Intent(this, ChatActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                R.id.nav_profile -> {
-                    val intent = Intent(this, ProfileActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    startActivity(intent)
-                    true
-                }
-                else -> false
-            }
-        }
-        bottomNavigation.post { bottomNavigation.selectedItemId = R.id.nav_home }
     }
 
     private fun setupSearchView() {
@@ -275,9 +241,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigation.selectedItemId = R.id.nav_home
-
+        setActiveNavItem(R.id.nav_home)
         val searchView = findViewById<SearchView>(R.id.searchView)
         performSearch(searchView.query.toString())
     }
