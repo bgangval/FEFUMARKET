@@ -89,31 +89,32 @@ object AdRepository {
         )
     )
 
-    // Публичный список всех объявлений (только чтение)
     val ads: List<Ad>
         get() = adsList
 
-    // Получить объявления конкретного пользователя
     fun getMyAds(userName: String): List<Ad> = adsList.filter { it.seller == userName }
 
-    // Добавить новое объявление
     fun addAd(ad: Ad) {
         adsList.add(ad)
     }
 
-    // Получить объявление по уникальному ID
     fun getById(id: String): Ad? {
         return adsList.find { it.id == id }
     }
 
-    // Обновить существующее объявление по уникальному ID
     fun updateAd(updatedAd: Ad) {
         val index = adsList.indexOfFirst { it.id == updatedAd.id }
         if (index != -1) adsList[index] = updatedAd
     }
 
-    // Найти объявление по названию (возвращает только первое совпадение)
     fun findByTitle(title: String): Ad? {
         return adsList.find { it.title.equals(title, ignoreCase = true) }
+    }
+
+    fun removeAd(id: String) {
+        val index = adsList.indexOfFirst { it.id == id }
+        if (index != -1) {
+            adsList.removeAt(index)
+        }
     }
 }

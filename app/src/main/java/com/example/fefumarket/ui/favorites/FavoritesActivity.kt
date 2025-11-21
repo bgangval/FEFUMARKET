@@ -1,18 +1,13 @@
 package com.example.fefumarket.ui.favorites
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.FavoritesManager
-import com.example.fefumarket.ui.chat.ChatActivity
-import com.example.fefumarket.ui.profile.ProfileActivity
-import com.example.fefumarket.ui.ad.MyPostsActivity
-import com.example.fefumarket.ui.home.HomeActivity
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.fefumarket.data.models.Ad
+import com.example.fefumarket.data.repository.AdRepository
 
 class FavoritesActivity : BaseActivity() {
 
@@ -26,16 +21,27 @@ class FavoritesActivity : BaseActivity() {
         recyclerView = findViewById(R.id.favoritesRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Получаем реальные избранные из FavoritesManager
         val favoriteList = FavoritesManager.getAll().toMutableList()
         adapter = FavoriteAdapter(favoriteList)
         recyclerView.adapter = adapter
     }
 
     private fun updateFavoritesList() {
-        val favoriteList = FavoritesManager.getAll().toMutableList()
+        val favoriteAds = FavoritesManager.getAll().toMutableList()
+        val updatedList = mutableListOf<Ad>()
+
+        for (ad in favoriteAds) {
+            val realAd = AdRepository.ads.find { it.id == ad.id }
+
+            if (realAd == null || realAd.isSold) {
+                FavoritesManager.remove(ad)
+            } else {
+                updatedList.add(realAd)
+            }
+        }
+
         adapter.items.clear()
-        adapter.items.addAll(favoriteList)
+        adapter.items.addAll(updatedList)
         adapter.notifyDataSetChanged()
     }
 

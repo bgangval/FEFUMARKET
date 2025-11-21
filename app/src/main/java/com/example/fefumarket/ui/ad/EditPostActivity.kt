@@ -15,6 +15,7 @@ import androidx.core.net.toUri
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.FavoritesManager
 
 class EditPostActivity : AppCompatActivity() {
 
@@ -29,6 +30,7 @@ class EditPostActivity : AppCompatActivity() {
     private lateinit var spinnerCategory: Spinner
     private lateinit var spinnerCondition: Spinner
     private lateinit var btnSave: MaterialButton
+    private lateinit var btnSold: MaterialButton
 
     private val photoList = mutableListOf<Uri>() // список выбранных фото
 
@@ -73,6 +75,7 @@ class EditPostActivity : AppCompatActivity() {
         spinnerCategory = findViewById(R.id.spinnerCategory)
         spinnerCondition = findViewById(R.id.spinnerCondition)
         btnSave = findViewById(R.id.btnSave)
+        btnSold = findViewById(R.id.btnSold)
 
         val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
         ad = AdRepository.findByTitle(adTitle) ?: run {
@@ -85,6 +88,7 @@ class EditPostActivity : AppCompatActivity() {
 
         btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
         btnSave.setOnClickListener { saveChanges() }
+        btnSold.setOnClickListener { markAsSold() }
         findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
     }
 
@@ -145,7 +149,28 @@ class EditPostActivity : AppCompatActivity() {
         finish()
     }
 
-    // Адаптер для ViewPager
+    private fun markAsSold() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Отметить как проданное")
+        builder.setMessage("Вы точно хотите отметить это объявление как проданное?")
+
+        builder.setPositiveButton("Да") { dialog, _ ->
+            // Удаляем объявление из всех мест
+            AdRepository.removeAd(ad.id)       // из репозитория всех объявлений
+            FavoritesManager.remove(ad)        // из избранного
+            Toast.makeText(this, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+            finish() // закрываем активити
+        }
+
+        builder.setNegativeButton("Отмена") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        builder.create().show()
+    }
+
+
     inner class PhotoPagerAdapter(private val photos: List<Uri>) : RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
         inner class PhotoViewHolder(itemView: ImageView) : RecyclerView.ViewHolder(itemView) {
             val imageView: ImageView = itemView

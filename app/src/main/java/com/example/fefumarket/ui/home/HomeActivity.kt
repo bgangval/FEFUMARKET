@@ -244,5 +244,6 @@ class HomeActivity : BaseActivity() {
         setActiveNavItem(R.id.nav_home)
         val searchView = findViewById<SearchView>(R.id.searchView)
         performSearch(searchView.query.toString())
+        adAdapter.updateAds(AdRepository.ads.toMutableList())
     }
 }

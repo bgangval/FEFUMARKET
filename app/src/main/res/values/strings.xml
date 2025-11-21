@@ -79,6 +79,7 @@
     <string name="edit_post">Редактировать объявление</string>
     <string name="ad_photo">Фото товара</string>
     <string name="change_photo">Изменить фото</string>
+    <string name="sold">Продано</string>
 
     <!-- Создание объявления -->
     <string name="new_post_title">Новое объявление</string>

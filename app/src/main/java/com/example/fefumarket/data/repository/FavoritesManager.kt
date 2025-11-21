@@ -6,9 +6,7 @@ object FavoritesManager {
     private val favorites = mutableListOf<Ad>()
 
     fun add(ad: Ad) {
-        if (!favorites.contains(ad)) {
-            favorites.add(ad)
-        }
+        if (!favorites.contains(ad)) favorites.add(ad)
     }
 
     fun remove(ad: Ad) {

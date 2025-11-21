@@ -9,5 +9,6 @@ data class Ad(
     val description: String,  // Описание
     val category: String,     // Категория
     val condition: String,    // Состояние
-    val imageUris: List<String> = listOf()  // Ресурс изображения
+    val imageUris: List<String> = listOf(),
+    var isSold: Boolean = false
 )
