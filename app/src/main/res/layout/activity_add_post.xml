@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg">
 
-    <!-- 🔹 Верхний бар -->
+    <!-- Верхний бар -->
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -44,7 +44,7 @@
             android:layout_height="48dp" />
     </LinearLayout>
 
-    <!-- 🔹 Основная зона с прокруткой -->
+    <!-- Основная зона с прокруткой -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
@@ -97,6 +97,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/title_hint"
+                android:textColorHint="@color/white"
                 android:inputType="text"
                 android:autofillHints="name"
                 android:padding="12dp"
@@ -120,6 +121,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/price_hint"
+                android:textColorHint="@color/white"
                 android:inputType="number"
                 android:autofillHints="postalCode"
                 android:padding="12dp"
@@ -148,6 +150,7 @@
                 android:minLines="3"
                 android:padding="12dp"
                 android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:textSize="16sp"
                 android:backgroundTint="@color/white"
                 android:layout_marginBottom="16dp"
@@ -208,4 +211,17 @@
                 android:layout_marginBottom="25dp"/>
         </LinearLayout>
     </ScrollView>
+
+    <!-- Нижняя панель кнопок -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:layout_margin="40dp"
+        android:text="Опубликовать"
+        android:textColor="@color/text_white"
+        android:backgroundTint="@color/button_blue"
+        app:cornerRadius="28dp"
+        android:fontFamily="@font/montserrat_regular"/>/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

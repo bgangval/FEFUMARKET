@@ -193,7 +193,7 @@ class HomeActivity : BaseActivity() {
 
         // Фильтрация по корпусам
         if (activeDorms.isNotEmpty())
-            result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
+            result = result.filter {ad -> activeDorms.contains(ad.dorm)}. toMutableList()
 
         // Фильтрация по категориям
         if (activeCategories.isNotEmpty())
