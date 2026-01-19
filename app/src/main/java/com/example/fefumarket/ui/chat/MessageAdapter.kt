@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.MessageItem
+import android.widget.ImageView
 
 class MessageAdapter(private val messages: List<MessageItem>) :
     RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
@@ -28,15 +29,22 @@ class MessageAdapter(private val messages: List<MessageItem>) :
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val msg = messages[position]
-        holder.messageText.text = msg.text
 
-        if (msg.isUser) {
-            // мои сообщения
-            holder.container.foregroundGravity = Gravity.END
+        holder.container.removeAllViews()
+
+        if (msg.isSticker && msg.stickerRes != null) {
+            val iv = ImageView(holder.container.context).apply {
+                setImageResource(msg.stickerRes)
+                layoutParams = FrameLayout.LayoutParams(200, 200)
+            }
+            holder.container.addView(iv)
         } else {
-            // сообщения собеседника
-            holder.container.foregroundGravity = Gravity.START
+            holder.messageText.visibility = View.VISIBLE
+            holder.messageText.text = msg.text
+            holder.container.addView(holder.messageText)
         }
+
+        holder.container.foregroundGravity = if (msg.isUser) Gravity.END else Gravity.START
     }
 
     override fun getItemViewType(position: Int): Int =

@@ -12,6 +12,7 @@ import com.example.fefumarket.R
 import com.example.fefumarket.data.models.ChatItem
 import com.example.fefumarket.data.models.MessageItem
 import com.example.fefumarket.data.repository.MessagesManager
+import android.view.View
 
 class MessageActivity : AppCompatActivity() {
 
@@ -23,6 +24,11 @@ class MessageActivity : AppCompatActivity() {
     private lateinit var chatId: String
     private lateinit var chat: ChatItem
     private val messages = mutableListOf<MessageItem>()
+
+    private fun hideKeyboard(editText: EditText) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(editText.windowToken, 0)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +77,40 @@ class MessageActivity : AppCompatActivity() {
 
                 // Обновляем данные в менеджере чатов
                 MessagesManager.addMessage(chatId, text)
+            }
+        }
+
+        val stickerButton: ImageButton = findViewById(R.id.stickerButton)
+        val stickerRecycler: RecyclerView = findViewById(R.id.recyclerViewStickers)
+
+        // Список стикеров (локальные PNG или URL)
+        val stickers = listOf(
+            R.drawable.sticker1,
+            R.drawable.sticker2,
+            R.drawable.sticker3,
+            R.drawable.sticker4,
+            R.drawable.sticker5,
+            R.drawable.sticker6
+        )
+
+        // Настройка RecyclerView стикеров
+        val stickerAdapter = StickerAdapter(stickers) { stickerRes ->
+            // Стикер выбран → добавляем как сообщение
+            messages.add(MessageItem(text = null, isUser = true, isSticker = true, stickerRes = stickerRes))
+            adapter.notifyItemInserted(messages.size - 1)
+            recyclerView.scrollToPosition(messages.size - 1)
+            stickerRecycler.visibility = View.GONE
+        }
+        stickerRecycler.adapter = stickerAdapter
+        stickerRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+        // Кнопка стикеров
+        stickerButton.setOnClickListener {
+            if (stickerRecycler.visibility == View.GONE) {
+                hideKeyboard(inputMessage)
+                stickerRecycler.visibility = View.VISIBLE
+            } else {
+                stickerRecycler.visibility = View.GONE
             }
         }
     }

@@ -24,8 +24,9 @@
             android:layout_marginEnd="8dp" />
 
         <LinearLayout
-            android:layout_width="359dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/bg_chat_header"
             android:orientation="vertical"
             android:paddingHorizontal="16dp"
@@ -58,35 +59,63 @@
         android:layout_weight="1"
         android:padding="8dp" />
 
-    <!-- Нижняя панель с полем ввода -->
+    <!-- Нижняя панель -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/inputMessage"
-            android:layout_width="0dp"
-            android:layout_height="70dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_input_message"
-            android:hint="Введите текст"
-            android:paddingHorizontal="16dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9FA3AE"
-            android:textSize="15sp" />
+        <!-- Панель стикеров -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewStickers"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:visibility="gone"
+            android:padding="8dp" />
 
-        <ImageButton
-            android:id="@+id/sendButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_send"
-            android:background="@null"
-            app:tint="#4E8DF5"
-            android:contentDescription="@string/send_button_desc"
-            android:layout_marginStart="8dp" />
+        <!-- Панель ввода -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/stickerButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_sticker"
+                android:background="@null"
+                app:tint="#4E8DF5"
+                android:layout_marginEnd="6dp" />
+
+            <EditText
+                android:id="@+id/inputMessage"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_input_message"
+                android:hint="Введите текст"
+                android:paddingHorizontal="16dp"
+                android:textColor="@color/white"
+                android:textColorHint="#9FA3AE"
+                android:textSize="15sp" />
+
+            <ImageButton
+                android:id="@+id/sendButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_send"
+                android:background="@null"
+                app:tint="#4E8DF5"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Пустое место внизу -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="16dp" />
     </LinearLayout>
 
 </LinearLayout>
