@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Активная кнопка -->
-    <item android:color="#488CDA" android:state_checked="true" />
-    <!-- Неактивные кнопки -->
-    <item android:color="#6E6E6E" android:state_checked="false" />
-</selector>
