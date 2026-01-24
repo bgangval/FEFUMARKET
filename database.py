@@ -4,13 +4,10 @@ from dotenv import load_dotenv
 from core.config import DATABASE_URL
 import os
 
-# Загружаем переменные из .env
 load_dotenv()
 
-# Берём строку подключения к БД
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# На случай, если .env не подхватился
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL is not set. Check your .env file")
 

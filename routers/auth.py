@@ -9,13 +9,14 @@ from schemas.auth import (
     UserRegister,
     UserLogin,
     Token,
-)
+    )
 
 from core.security import (
     hash_password,
     verify_password,
     create_access_token,
 )
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -39,13 +40,14 @@ def register(
     user = User(
         email=data.email,
         password_hash=hash_password(data.password),
-        is_verified=False,
+        name=data.name,
         is_admin=False,
     )
 
     db.add(user)
     db.commit()
     db.refresh(user)
+
 
 # =========================
 # LOGIN
@@ -66,6 +68,7 @@ def login(
             detail="Invalid credentials",
         )
 
+
     token = create_access_token({"sub": str(db_user.id)})
 
     return {
@@ -81,4 +84,3 @@ def login(
 def logout():
     # logout = удалить токен на фронте
     return {"message": "Logged out"}
-

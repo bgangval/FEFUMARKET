@@ -21,7 +21,7 @@ def update_me(
     if data.name is not None:
         current_user.name = data.name
     if data.avatar_url is not None:
-        current_user.avatar_url = data.avatar_url  # ← ИСПРАВЛЕНО
+        current_user.avatar_url = data.avatar_url
 
     db.commit()
     db.refresh(current_user)
