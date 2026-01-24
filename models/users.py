@@ -13,7 +13,6 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     name = Column(String, nullable=False)
     avatar_url = Column(String, nullable=True)
-    is_verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     favorites = relationship("Favorite", backref="user", cascade="all, delete")
     chats_as_buyer = relationship("Chat", foreign_keys="Chat.buyer_id")
