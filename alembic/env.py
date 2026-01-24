@@ -1,9 +1,17 @@
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 from database import Base
 
+import models.users
+import models.products
+import models.categories
+import models.chats
+import models.messages
+import models.favorites
+import models.product_images
 
 config = context.config
 
