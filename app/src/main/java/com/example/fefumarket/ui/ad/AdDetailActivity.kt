@@ -9,17 +9,20 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
-import androidx.viewpager2.widget.ViewPager2
 import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.viewpager2.widget.ViewPager2
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.repository.FavoritesManager
 import com.example.fefumarket.data.repository.MessagesManager
+import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.ui.chat.MessageActivity
+import kotlinx.coroutines.launch
 
 class AdDetailActivity : AppCompatActivity() {
 
@@ -32,6 +35,8 @@ class AdDetailActivity : AppCompatActivity() {
     private lateinit var adCategory: TextView
     private lateinit var adCondition: TextView
     private lateinit var btnFavoriteTop: ImageButton
+
+    private lateinit var adRepository: AdRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +57,10 @@ class AdDetailActivity : AppCompatActivity() {
         val btnChat: Button = findViewById(R.id.contactButton)
         val btnShareTop: ImageButton = findViewById(R.id.btnChatTop)
 
-        // ---------- Получаем объявление ----------
+        // ---------- Создаём репозиторий ----------
+        adRepository = AdRepository(RetrofitClient.create(this))
+
+        // ---------- Получаем ID объявления ----------
         val adIdFromIntent = intent.getStringExtra("AD_ID")
         val adIdFromDeepLink = intent?.data?.lastPathSegment
         val resolvedId = adIdFromIntent ?: adIdFromDeepLink
@@ -63,23 +71,23 @@ class AdDetailActivity : AppCompatActivity() {
             return
         }
 
-        val foundAd = AdRepository.getById(resolvedId)
-        if (foundAd == null) {
-            Toast.makeText(this, "Объявление не найдено", Toast.LENGTH_SHORT).show()
-            finish()
-            return
+        // ---------- Загружаем объявление асинхронно ----------
+        lifecycleScope.launch {
+            val foundAd = adRepository.getAdById(resolvedId)
+            if (foundAd == null) {
+                Toast.makeText(this@AdDetailActivity, "Объявление не найдено", Toast.LENGTH_SHORT).show()
+                finish()
+                return@launch
+            }
+            ad = foundAd
+            updateUI()
         }
-
-        ad = foundAd
-        updateUI() // первый раз
 
         // ---------- Кнопка "Назад" ----------
         btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         // ---------- Избранное ----------
-        var isFavorite = FavoritesManager.isFavorite(ad)
-        updateFavoriteIcon(btnFavoriteTop, isFavorite)
-
+        var isFavorite = false
         btnFavoriteTop.setOnClickListener {
             isFavorite = !isFavorite
             if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
@@ -99,14 +107,15 @@ class AdDetailActivity : AppCompatActivity() {
         btnShareTop.setOnClickListener { shareAd() }
     }
 
-    // ---------- Обновление UI ----------
+    // ---------- Обновление объявления при возврате ----------
     override fun onResume() {
         super.onResume()
-        // Перезагружаем объявление на случай редактирования
-        val updatedAd = AdRepository.getById(ad.id)
-        if (updatedAd != null) {
-            ad = updatedAd
-            updateUI()
+        lifecycleScope.launch {
+            val updatedAd = adRepository.getAdById(ad.id)
+            if (updatedAd != null) {
+                ad = updatedAd
+                updateUI()
+            }
         }
     }
 

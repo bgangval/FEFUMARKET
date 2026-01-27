@@ -16,10 +16,16 @@ import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.repository.FavoritesManager
+import com.example.fefumarket.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class EditPostActivity : AppCompatActivity() {
 
     private lateinit var ad: Ad
+    private lateinit var adRepository: AdRepository
 
     private lateinit var photoPager: ViewPager2
     private lateinit var btnAddPhoto: ImageButton
@@ -32,7 +38,7 @@ class EditPostActivity : AppCompatActivity() {
     private lateinit var btnSave: MaterialButton
     private lateinit var btnSold: MaterialButton
 
-    private val photoList = mutableListOf<Uri>() // список выбранных фото
+    private val photoList = mutableListOf<Uri>()
 
     private val pickImagesLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
@@ -46,26 +52,26 @@ class EditPostActivity : AppCompatActivity() {
 
     // Списки для Spinner
     private val dorms = listOf(
-        "Город", "РГИСИ",
-        "Корпус 1.8", "Корпус 1.9", "Корпус 1.10", "Корпус 1.11",
-        "Корпус 1.12", "Корпус 1.13", "Корпус 2.1", "Корпус 2.2",
-        "Корпус 2.3", "Корпус 2.4", "Корпус 2.5", "Корпус 2.6",
-        "Корпус 2.7", "Корпус 4", "Корпус 5", "Корпус 6.1",
-        "Корпус 6.2", "Корпус 7.1", "Корпус 7.2", "Корпус 8.1",
-        "Корпус 8.2", "Корпус 9", "Корпус 10", "Корпус 11"
+        "Город", "РГИСИ", "Корпус 1.8", "Корпус 1.9", "Корпус 1.10", "Корпус 1.11",
+        "Корпус 1.12", "Корпус 1.13", "Корпус 2.1", "Корпус 2.2", "Корпус 2.3",
+        "Корпус 2.4", "Корпус 2.5", "Корпус 2.6", "Корпус 2.7", "Корпус 4", "Корпус 5",
+        "Корпус 6.1", "Корпус 6.2", "Корпус 7.1", "Корпус 7.2", "Корпус 8.1", "Корпус 8.2",
+        "Корпус 9", "Корпус 10", "Корпус 11"
     )
-
     private val categories = listOf(
-        "Одежда", "Обувь", "Техника", "Бьюти",
-        "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
+        "Одежда", "Обувь", "Техника", "Бьюти", "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
     )
-
     private val conditions = listOf("Новое", "Б/у")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_post)
 
+        // 🔹 Инициализация репозитория
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api)
+
+        // Инициализация UI
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
         etTitle = findViewById(R.id.etTitle)
@@ -77,19 +83,28 @@ class EditPostActivity : AppCompatActivity() {
         btnSave = findViewById(R.id.btnSave)
         btnSold = findViewById(R.id.btnSold)
 
-        val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
-        ad = AdRepository.findByTitle(adTitle) ?: run {
-            Toast.makeText(this, "Объявление не найдено", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
+        findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
 
-        initFields()
+        // Получаем объявление по title (через корутину, если репозиторий suspend)
+        val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
+        CoroutineScope(Dispatchers.IO).launch {
+            val foundAd = adRepository.findByTitle(adTitle)
+            if (foundAd == null) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EditPostActivity, "Объявление не найдено", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } else {
+                ad = foundAd
+                withContext(Dispatchers.Main) {
+                    initFields()
+                }
+            }
+        }
 
         btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
         btnSave.setOnClickListener { saveChanges() }
         btnSold.setOnClickListener { markAsSold() }
-        findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
     }
 
     private fun initFields() {
@@ -142,11 +157,13 @@ class EditPostActivity : AppCompatActivity() {
             imageUris = newImageUris
         )
 
-        // Обновляем репозиторий
-        AdRepository.updateAd(updatedAd)
-
-        Toast.makeText(this, "Объявление обновлено", Toast.LENGTH_SHORT).show()
-        finish()
+        CoroutineScope(Dispatchers.IO).launch {
+            adRepository.updateAd(updatedAd)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@EditPostActivity, "Объявление обновлено", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     private fun markAsSold() {
@@ -155,21 +172,20 @@ class EditPostActivity : AppCompatActivity() {
         builder.setMessage("Вы точно хотите отметить это объявление как проданное?")
 
         builder.setPositiveButton("Да") { dialog, _ ->
-            // Удаляем объявление из всех мест
-            AdRepository.removeAd(ad.id)       // из репозитория всех объявлений
-            FavoritesManager.remove(ad)        // из избранного
-            Toast.makeText(this, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-            finish() // закрываем активити
+            CoroutineScope(Dispatchers.IO).launch {
+                adRepository.removeAd(ad.id)
+                FavoritesManager.remove(ad)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EditPostActivity, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                    finish()
+                }
+            }
         }
 
-        builder.setNegativeButton("Отмена") { dialog, _ ->
-            dialog.dismiss()
-        }
-
+        builder.setNegativeButton("Отмена") { dialog, _ -> dialog.dismiss() }
         builder.create().show()
     }
-
 
     inner class PhotoPagerAdapter(private val photos: List<Uri>) : RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
         inner class PhotoViewHolder(itemView: ImageView) : RecyclerView.ViewHolder(itemView) {
@@ -193,7 +209,6 @@ class EditPostActivity : AppCompatActivity() {
 
     private fun whiteTextAdapter(items: List<String>): ArrayAdapter<String> {
         return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
-
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = super.getView(position, convertView, parent)
                 (view as TextView).setTextColor(resources.getColor(R.color.white, null))
@@ -206,8 +221,6 @@ class EditPostActivity : AppCompatActivity() {
                 view.setBackgroundColor(resources.getColor(R.color.bg, null))
                 return view
             }
-        }.apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        }.apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
     }
 }

@@ -51,4 +51,19 @@ class SessionManager(context: Context) {
     fun clearFull() {
         prefs.edit().clear().apply()
     }
+
+    /** ===== TOKEN (для API) ===== */
+
+    fun saveToken(token: String) {
+        prefs.edit().putString("AUTH_TOKEN", token).apply()
+    }
+
+    fun getToken(): String? {
+        return prefs.getString("AUTH_TOKEN", null)
+    }
+
+    fun clearToken() {
+        prefs.edit().remove("AUTH_TOKEN").apply()
+    }
+
 }

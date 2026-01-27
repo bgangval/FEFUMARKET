@@ -8,14 +8,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.AdRepository
-import com.example.fefumarket.data.utils.GridSpacingItemDecoration
 import com.example.fefumarket.data.repository.SessionManager
-import com.example.fefumarket.ui.chat.ChatActivity
-import com.example.fefumarket.ui.favorites.FavoritesActivity
-import com.example.fefumarket.ui.profile.ProfileActivity
-import com.example.fefumarket.ui.home.HomeActivity
+import com.example.fefumarket.data.utils.GridSpacingItemDecoration
+import com.example.fefumarket.network.RetrofitClient
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MyPostsActivity : BaseActivity() {
 
@@ -24,6 +24,7 @@ class MyPostsActivity : BaseActivity() {
     private lateinit var btnAddPost: MaterialButton
 
     private lateinit var currentUser: String
+    private lateinit var adRepository: AdRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,35 +35,46 @@ class MyPostsActivity : BaseActivity() {
 
         currentUser = SessionManager(this).getUserName() ?: ""
 
-        adapter = MyPostsAdapter(
-            AdRepository.getMyAds(currentUser).toMutableList()
-        ) { ad ->
-            val intent = Intent(this, EditPostActivity::class.java)
-            intent.putExtra("AD_TITLE", ad.title)
-            startActivity(intent)
-        }
-
-        // Сетка 2 в ряд
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
-
-        // ОТСТУПЫ БЕЗ DIMEN — 16dp
-        val spacingPx = (16 * resources.displayMetrics.density).toInt()
-        recyclerView.addItemDecoration(
-            GridSpacingItemDecoration(2, spacingPx, true)
-        )
-
-        recyclerView.adapter = adapter
+        // 🔹 Инициализация репозитория
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api)
 
         btnAddPost.setOnClickListener {
             startActivity(Intent(this, AddPostActivity::class.java))
         }
+
+        // Сетка 2 в ряд
+        recyclerView.layoutManager = GridLayoutManager(this, 2)
+        val spacingPx = (16 * resources.displayMetrics.density).toInt()
+        recyclerView.addItemDecoration(GridSpacingItemDecoration(2, spacingPx, true))
+
+        // Загружаем объявления текущего пользователя
+        loadMyAds()
     }
 
     override fun onResume() {
         super.onResume()
         setActiveNavItem(R.id.nav_add)
-        adapter.updateList(
-            AdRepository.getMyAds(currentUser).toMutableList()
-        )
+        loadMyAds() // обновляем список после возвращения
+    }
+
+    private fun loadMyAds() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val allAds = adRepository.getAds()
+            val myAds = allAds.filter { it.seller == currentUser }.toMutableList()
+
+            withContext(Dispatchers.Main) {
+                if (::adapter.isInitialized) {
+                    adapter.updateList(myAds)
+                } else {
+                    adapter = MyPostsAdapter(myAds) { ad ->
+                        val intent = Intent(this@MyPostsActivity, EditPostActivity::class.java)
+                        intent.putExtra("AD_TITLE", ad.title)
+                        startActivity(intent)
+                    }
+                    recyclerView.adapter = adapter
+                }
+            }
+        }
     }
 }

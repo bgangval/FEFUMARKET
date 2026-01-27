@@ -2,7 +2,6 @@ package com.example.fefumarket.ui.ad
 
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,9 +12,16 @@ import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.data.repository.SessionManager
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.UUID
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.TextView
 
 class AddPostActivity : AppCompatActivity() {
 
@@ -29,20 +35,6 @@ class AddPostActivity : AppCompatActivity() {
     private lateinit var spinnerCondition: Spinner
     private lateinit var btnSave: MaterialButton
 
-    private val photoList = mutableListOf<Uri>()
-
-    // Выбор нескольких фото
-    private val pickImagesLauncher = registerForActivityResult(
-        ActivityResultContracts.GetMultipleContents()
-    ) { uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            photoList.clear()
-            photoList.addAll(uris)
-            photoPager.adapter?.notifyDataSetChanged()
-        }
-    }
-
-    // Данные для спиннеров
     private val dorms = listOf(
         "Город", "РГИСИ",
         "Корпус 1.8", "Корпус 1.9", "Корпус 1.10", "Корпус 1.11",
@@ -60,11 +52,30 @@ class AddPostActivity : AppCompatActivity() {
 
     private val conditions = listOf("Новое", "Б/у")
 
+    private val photoList = mutableListOf<Uri>()
+
+    private lateinit var adRepository: AdRepository
+
+    // Выбор нескольких фото
+    private val pickImagesLauncher = registerForActivityResult(
+        ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            photoList.clear()
+            photoList.addAll(uris)
+            photoPager.adapter?.notifyDataSetChanged()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_post)
 
-        // === Инициализация UI ===
+        // 🔹 Инициализация репозитория
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api)
+
+        // UI
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
         etTitle = findViewById(R.id.etTitle)
@@ -75,19 +86,15 @@ class AddPostActivity : AppCompatActivity() {
         spinnerCondition = findViewById(R.id.spinnerCondition)
         btnSave = findViewById(R.id.btnSave)
 
-        // Назад
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
 
-        // Настройка ViewPager для фото
         photoPager.adapter = PhotoPagerAdapter(photoList)
         btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
 
-        // Настройка спиннеров
         spinnerDorm.adapter = whiteTextAdapter(dorms)
         spinnerCategory.adapter = whiteTextAdapter(categories)
         spinnerCondition.adapter = whiteTextAdapter(conditions)
 
-        // Сохранение объявления
         btnSave.setOnClickListener { saveAd() }
     }
 
@@ -105,9 +112,7 @@ class AddPostActivity : AppCompatActivity() {
         }
 
         val session = SessionManager(this)
-        val seller = session.getUserName()?.takeIf { it.isNotBlank() }
-            ?: session.getLogin()
-            ?: "Без имени"
+        val seller = session.getUserName()?.takeIf { it.isNotBlank() } ?: session.getLogin() ?: "Без имени"
 
         val newAd = Ad(
             id = UUID.randomUUID().toString(),
@@ -121,9 +126,14 @@ class AddPostActivity : AppCompatActivity() {
             imageUris = photoList.map { it.toString() }
         )
 
-        AdRepository.addAd(newAd)
-        Toast.makeText(this, "Объявление опубликовано", Toast.LENGTH_SHORT).show()
-        finish()
+        // 🔹 Добавление через репозиторий
+        CoroutineScope(Dispatchers.IO).launch {
+            adRepository.addAd(newAd)
+            runOnUiThread {
+                Toast.makeText(this@AddPostActivity, "Объявление опубликовано", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     // ===== Адаптер для фото =====

@@ -2,6 +2,7 @@ package com.example.fefumarket.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -10,6 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.fefumarket.R
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.ui.home.HomeActivity
+import com.example.fefumarket.network.RetrofitClient
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.example.fefumarket.data.models.LoginRequest
+import com.example.fefumarket.data.models.LoginResponse
 
 class LoginActivity : AppCompatActivity() {
 
@@ -35,21 +41,45 @@ class LoginActivity : AppCompatActivity() {
         val register = findViewById<TextView>(R.id.register)
 
         loginButton.setOnClickListener {
+
             val emailText = email.text.toString().trim()
             val passText = password.text.toString().trim()
 
             if (emailText.isEmpty() || passText.isEmpty()) {
                 Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
-            } else if (emailText == "test@mail.com" && passText == "123") {
+                return@setOnClickListener
+            }
 
-                session.saveLogin(emailText)
+            val api = RetrofitClient.create(this)
 
-                val intent = Intent(this, HomeActivity::class.java)
-                startActivity(intent)
-                finish()
+            lifecycleScope.launch {
+                try {
+                    val response = api.login(
+                        LoginRequest(
+                            email = emailText,
+                            password = passText
+                        )
+                    )
 
-            } else {
-                Toast.makeText(this, "Неверная почта или пароль", Toast.LENGTH_SHORT).show()
+                    // СОХРАНЯЕМ ТОКЕН
+                    session.saveToken(response.access_token)
+                    session.saveLogin(emailText)
+
+                    // ЛОГ ДЛЯ ПРОВЕРКИ
+                    Log.d("AUTH", "TOKEN = ${response.access_token}")
+
+                    startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
+                    finish()
+
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@LoginActivity,
+                        "Ошибка входа",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    Log.e("AUTH", "Login error", e)
+                }
             }
         }
 

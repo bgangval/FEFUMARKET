@@ -12,29 +12,27 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
+import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.network.RetrofitClient
+import com.example.fefumarket.network.ApiService
 import com.example.fefumarket.data.repository.SessionManager
-import com.example.fefumarket.ui.chat.ChatActivity
-import com.example.fefumarket.ui.favorites.FavoritesActivity
 import com.example.fefumarket.ui.auth.LoginActivity
-import com.example.fefumarket.ui.ad.MyPostsActivity
-import com.example.fefumarket.ui.profile.ProfileActivity
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import kotlinx.coroutines.launch
 
 class HomeActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adAdapter: AdAdapter
-
     private lateinit var filtersRecyclerView: RecyclerView
     private lateinit var filterChipAdapter: FilterChipAdapter
 
@@ -46,6 +44,8 @@ class HomeActivity : BaseActivity() {
 
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
+
+    private var currentAds = mutableListOf<Ad>() // 🔹 Список для серверных данных
 
     private val filtersLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -81,7 +81,6 @@ class HomeActivity : BaseActivity() {
             return
         }
 
-        // Современный способ
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         initFilterChips()
@@ -101,6 +100,10 @@ class HomeActivity : BaseActivity() {
             }
             filtersLauncher.launch(intent)
         }
+
+        val api = RetrofitClient.create(this)
+        val adRepository = AdRepository(api)
+        loadAdsFromServer(adRepository)
     }
 
     private fun initFilterChips() {
@@ -131,7 +134,7 @@ class HomeActivity : BaseActivity() {
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(20)
-        adAdapter = AdAdapter(AdRepository.ads.toMutableList()) // MutableList
+        adAdapter = AdAdapter(currentAds) // 🔹 Подключаем currentAds вместо локального объекта
         recyclerView.adapter = adAdapter
     }
 
@@ -178,10 +181,25 @@ class HomeActivity : BaseActivity() {
         })
     }
 
-    private fun performSearch(query: String) {
-        var result = AdRepository.ads.toMutableList()
+    // 🔹 🔹 🔹 Загрузка объявлений с сервера
+    private fun loadAdsFromServer(adRepository: AdRepository) {
+        lifecycleScope.launch {
+            try {
+                val ads = adRepository.getAds()
+                currentAds.clear()
+                currentAds.addAll(ads)
+                adAdapter.updateAds(currentAds)
+                Log.d("HOME_ADS", "Ads loaded: ${ads.size}")
+            } catch (e: Exception) {
+                Log.d("HOME_ADS", "Ошибка: ${e.message}")
+                Toast.makeText(this@HomeActivity, "Ошибка загрузки объявлений", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
-        // Фильтрация по поиску
+    private fun performSearch(query: String) {
+        var result = currentAds.toMutableList() // 🔹 фильтруем currentAds
+
         if (query.isNotEmpty()) {
             result = result.filter { ad ->
                 ad.title.contains(query, ignoreCase = true) ||
@@ -191,19 +209,15 @@ class HomeActivity : BaseActivity() {
             }.toMutableList()
         }
 
-        // Фильтрация по корпусам
         if (activeDorms.isNotEmpty())
-            result = result.filter {ad -> activeDorms.contains(ad.dorm)}. toMutableList()
+            result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
 
-        // Фильтрация по категориям
         if (activeCategories.isNotEmpty())
             result = result.filter { ad -> activeCategories.contains(ad.category) }.toMutableList()
 
-        // Фильтрация по состоянию
         if (activeConditions.isNotEmpty())
             result = result.filter { ad -> activeConditions.contains(ad.condition) }.toMutableList()
 
-        // Фильтрация по цене
         result = result.filter { ad ->
             val priceValue = ad.price.replace(Regex("[^\\d]"), "").toIntOrNull() ?: 0
             val minOk = minPriceFilter?.let { priceValue >= it } ?: true
@@ -244,6 +258,6 @@ class HomeActivity : BaseActivity() {
         setActiveNavItem(R.id.nav_home)
         val searchView = findViewById<SearchView>(R.id.searchView)
         performSearch(searchView.query.toString())
-        adAdapter.updateAds(AdRepository.ads.toMutableList())
+        adAdapter.updateAds(currentAds) // 🔹 обновляем currentAds вместо локального объекта
     }
 }

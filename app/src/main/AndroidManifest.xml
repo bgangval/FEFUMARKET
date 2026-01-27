@@ -8,11 +8,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.FEFUMARKET">
+        android:theme="@style/Theme.FEFUMARKET"
+        android:usesCleartextTraffic="true">
+        <!-- Остальные activity остаются без изменений -->
         <activity
             android:name=".ui.base.BaseActivity"
             android:exported="false" />
-        <!-- Edit / Add / My Posts -->
         <activity
             android:name=".ui.ad.EditPostActivity"
             android:exported="false" />
@@ -27,15 +28,13 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data
                     android:host="ad"
                     android:scheme="fefumarket" />
             </intent-filter>
-        </activity> <!-- Home / Filters -->
+        </activity>
         <activity
             android:name=".ui.home.HomeActivity"
             android:exported="false" />

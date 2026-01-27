@@ -8,11 +8,17 @@ import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.FavoritesManager
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FavoritesActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: FavoriteAdapter
+    private lateinit var adRepository: AdRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,28 +27,36 @@ class FavoritesActivity : BaseActivity() {
         recyclerView = findViewById(R.id.favoritesRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val favoriteList = FavoritesManager.getAll().toMutableList()
-        adapter = FavoriteAdapter(favoriteList)
+        // 🔹 Инициализация репозитория
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api)
+
+        adapter = FavoriteAdapter(mutableListOf())
         recyclerView.adapter = adapter
     }
 
     private fun updateFavoritesList() {
-        val favoriteAds = FavoritesManager.getAll().toMutableList()
-        val updatedList = mutableListOf<Ad>()
+        CoroutineScope(Dispatchers.IO).launch {
+            val allAds = adRepository.getAds() // все объявления с репозитория
+            val favoriteAds = FavoritesManager.getAll()
 
-        for (ad in favoriteAds) {
-            val realAd = AdRepository.ads.find { it.id == ad.id }
+            val updatedList = favoriteAds.mapNotNull { favAd ->
+                allAds.find { it.id == favAd.id } // берем только реальные объявления
+            }.toMutableList()
 
-            if (realAd == null || realAd.isSold) {
-                FavoritesManager.remove(ad)
-            } else {
-                updatedList.add(realAd)
+            // Если какие-то избранные больше не существуют, удаляем их из FavoritesManager
+            favoriteAds.forEach { favAd ->
+                if (updatedList.none { it.id == favAd.id }) {
+                    FavoritesManager.remove(favAd)
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                adapter.items.clear()
+                adapter.items.addAll(updatedList)
+                adapter.notifyDataSetChanged()
             }
         }
-
-        adapter.items.clear()
-        adapter.items.addAll(updatedList)
-        adapter.notifyDataSetChanged()
     }
 
     override fun onResume() {
