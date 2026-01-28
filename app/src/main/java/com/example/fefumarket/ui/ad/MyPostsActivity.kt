@@ -25,6 +25,7 @@ class MyPostsActivity : BaseActivity() {
 
     private lateinit var currentUser: String
     private lateinit var adRepository: AdRepository
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,11 +34,13 @@ class MyPostsActivity : BaseActivity() {
         recyclerView = findViewById(R.id.myPostsRecyclerView)
         btnAddPost = findViewById(R.id.btnAddPost)
 
-        currentUser = SessionManager(this).getUserName() ?: ""
+        // 🔹 SessionManager
+        sessionManager = SessionManager(this)
+        currentUser = sessionManager.getUserName() ?: ""
 
-        // 🔹 Инициализация репозитория
+        // 🔹 Инициализация репозитория с session
         val api = RetrofitClient.create(this)
-        adRepository = AdRepository(api)
+        adRepository = AdRepository(api, sessionManager)
 
         btnAddPost.setOnClickListener {
             startActivity(Intent(this, AddPostActivity::class.java))

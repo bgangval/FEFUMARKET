@@ -10,22 +10,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
-import com.google.android.material.button.MaterialButton
-import androidx.core.net.toUri
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.repository.FavoritesManager
+import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.network.RetrofitClient
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 class EditPostActivity : AppCompatActivity() {
 
     private lateinit var ad: Ad
     private lateinit var adRepository: AdRepository
+    private lateinit var sessionManager: SessionManager
 
     private lateinit var photoPager: ViewPager2
     private lateinit var btnAddPhoto: ImageButton
@@ -50,7 +52,6 @@ class EditPostActivity : AppCompatActivity() {
         }
     }
 
-    // Списки для Spinner
     private val dorms = listOf(
         "Город", "РГИСИ", "Корпус 1.8", "Корпус 1.9", "Корпус 1.10", "Корпус 1.11",
         "Корпус 1.12", "Корпус 1.13", "Корпус 2.1", "Корпус 2.2", "Корпус 2.3",
@@ -67,11 +68,12 @@ class EditPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_post)
 
-        // 🔹 Инициализация репозитория
+        // 🔹 SessionManager и репозиторий
+        sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
-        adRepository = AdRepository(api)
+        adRepository = AdRepository(api, sessionManager)
 
-        // Инициализация UI
+        // UI
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
         etTitle = findViewById(R.id.etTitle)
@@ -82,10 +84,13 @@ class EditPostActivity : AppCompatActivity() {
         spinnerCondition = findViewById(R.id.spinnerCondition)
         btnSave = findViewById(R.id.btnSave)
         btnSold = findViewById(R.id.btnSold)
-
         findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
 
-        // Получаем объявление по title (через корутину, если репозиторий suspend)
+        btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
+        btnSave.setOnClickListener { saveChanges() }
+        btnSold.setOnClickListener { markAsSold() }
+
+        // Загружаем объявление по title
         val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
         CoroutineScope(Dispatchers.IO).launch {
             val foundAd = adRepository.findByTitle(adTitle)
@@ -96,15 +101,9 @@ class EditPostActivity : AppCompatActivity() {
                 }
             } else {
                 ad = foundAd
-                withContext(Dispatchers.Main) {
-                    initFields()
-                }
+                withContext(Dispatchers.Main) { initFields() }
             }
         }
-
-        btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
-        btnSave.setOnClickListener { saveChanges() }
-        btnSold.setOnClickListener { markAsSold() }
     }
 
     private fun initFields() {
@@ -120,13 +119,11 @@ class EditPostActivity : AppCompatActivity() {
         etPrice.setText(ad.price.filter { it.isDigit() })
         etDescription.setText(ad.description)
 
-        // Spinner'ы
+        // Spinner
         spinnerDorm.adapter = whiteTextAdapter(dorms)
         spinnerDorm.setSelection(dorms.indexOf(ad.dorm).coerceAtLeast(0))
-
         spinnerCategory.adapter = whiteTextAdapter(categories)
         spinnerCategory.setSelection(categories.indexOf(ad.category).coerceAtLeast(0))
-
         spinnerCondition.adapter = whiteTextAdapter(conditions)
         spinnerCondition.setSelection(conditions.indexOf(ad.condition).coerceAtLeast(0))
     }
@@ -139,13 +136,12 @@ class EditPostActivity : AppCompatActivity() {
         val newDescription = etDescription.text.toString().trim()
         val newCategory = spinnerCategory.selectedItem?.toString()?.trim() ?: ""
         val newCondition = spinnerCondition.selectedItem?.toString()?.trim() ?: ""
+        val newImageUris = photoList.map { it.toString() }
 
         if (newTitle.isEmpty() || newPriceText.isEmpty()) {
             Toast.makeText(this, "Заполните название и цену", Toast.LENGTH_SHORT).show()
             return
         }
-
-        val newImageUris = photoList.map { it.toString() }
 
         val updatedAd = ad.copy(
             title = newTitle,
@@ -170,7 +166,6 @@ class EditPostActivity : AppCompatActivity() {
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
         builder.setTitle("Отметить как проданное")
         builder.setMessage("Вы точно хотите отметить это объявление как проданное?")
-
         builder.setPositiveButton("Да") { dialog, _ ->
             CoroutineScope(Dispatchers.IO).launch {
                 adRepository.removeAd(ad.id)
@@ -182,7 +177,6 @@ class EditPostActivity : AppCompatActivity() {
                 }
             }
         }
-
         builder.setNegativeButton("Отмена") { dialog, _ -> dialog.dismiss() }
         builder.create().show()
     }

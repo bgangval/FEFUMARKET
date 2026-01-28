@@ -2,6 +2,7 @@ package com.example.fefumarket.ui.ad
 
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,16 +13,13 @@ import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
-import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.network.RetrofitClient
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.UUID
-import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.TextView
 
 class AddPostActivity : AppCompatActivity() {
 
@@ -55,6 +53,7 @@ class AddPostActivity : AppCompatActivity() {
     private val photoList = mutableListOf<Uri>()
 
     private lateinit var adRepository: AdRepository
+    private lateinit var sessionManager: SessionManager
 
     // Выбор нескольких фото
     private val pickImagesLauncher = registerForActivityResult(
@@ -71,9 +70,10 @@ class AddPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_post)
 
-        // 🔹 Инициализация репозитория
+        // 🔹 Инициализация SessionManager и AdRepository
+        sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
-        adRepository = AdRepository(api)
+        adRepository = AdRepository(api, sessionManager)
 
         // UI
         photoPager = findViewById(R.id.photoPager)
@@ -111,8 +111,7 @@ class AddPostActivity : AppCompatActivity() {
             return
         }
 
-        val session = SessionManager(this)
-        val seller = session.getUserName()?.takeIf { it.isNotBlank() } ?: session.getLogin() ?: "Без имени"
+        val seller = sessionManager.getUserName()?.takeIf { it.isNotBlank() } ?: sessionManager.getLogin() ?: "Без имени"
 
         val newAd = Ad(
             id = UUID.randomUUID().toString(),

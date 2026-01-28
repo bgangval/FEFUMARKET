@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.FavoritesManager
-import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +19,7 @@ class FavoritesActivity : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: FavoriteAdapter
     private lateinit var adRepository: AdRepository
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,9 +28,10 @@ class FavoritesActivity : BaseActivity() {
         recyclerView = findViewById(R.id.favoritesRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // 🔹 Инициализация репозитория
+        // 🔹 Инициализация session и репозитория
+        sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
-        adRepository = AdRepository(api)
+        adRepository = AdRepository(api, sessionManager)
 
         adapter = FavoriteAdapter(mutableListOf())
         recyclerView.adapter = adapter

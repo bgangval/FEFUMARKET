@@ -23,9 +23,8 @@ import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
-import com.example.fefumarket.network.RetrofitClient
-import com.example.fefumarket.network.ApiService
 import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.ui.auth.LoginActivity
 import kotlinx.coroutines.launch
 
@@ -36,6 +35,11 @@ class HomeActivity : BaseActivity() {
     private lateinit var filtersRecyclerView: RecyclerView
     private lateinit var filterChipAdapter: FilterChipAdapter
 
+    private lateinit var session: SessionManager
+    private lateinit var adRepository: AdRepository
+
+    private var currentAds = mutableListOf<Ad>()
+
     private var activeDorms = emptyList<String>()
     private var activeCategories = emptyList<String>()
     private var activeConditions = emptyList<String>()
@@ -44,8 +48,6 @@ class HomeActivity : BaseActivity() {
 
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
-
-    private var currentAds = mutableListOf<Ad>() // 🔹 Список для серверных данных
 
     private val filtersLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -74,12 +76,17 @@ class HomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        val session = SessionManager(this)
+        // 🔹 Инициализация SessionManager
+        session = SessionManager(this)
         if (session.getLogin() == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
+
+        // 🔹 Инициализация AdRepository с session
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api, session)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -87,25 +94,14 @@ class HomeActivity : BaseActivity() {
         initRecyclerView()
         setupBottomNavigation()
         setupSearchView()
-        performSearch("")
 
         val btnFilter: ImageButton = findViewById(R.id.btnFilter)
-        btnFilter.setOnClickListener {
-            val intent = Intent(this, FiltersActivity::class.java).apply {
-                putExtra("DORMS", activeDorms.toTypedArray())
-                putExtra("CATEGORIES", activeCategories.toTypedArray())
-                putExtra("CONDITIONS", activeConditions.toTypedArray())
-                putExtra("MIN_PRICE", minPriceFilter?.toString())
-                putExtra("MAX_PRICE", maxPriceFilter?.toString())
-            }
-            filtersLauncher.launch(intent)
-        }
+        btnFilter.setOnClickListener { openFilters() }
 
-        val api = RetrofitClient.create(this)
-        val adRepository = AdRepository(api)
-        loadAdsFromServer(adRepository)
+        loadAdsFromServer()
     }
 
+    // ===== Инициализация фильтров =====
     private fun initFilterChips() {
         filtersRecyclerView = findViewById(R.id.filtersRecyclerView)
         filterChipAdapter = FilterChipAdapter(
@@ -129,15 +125,17 @@ class HomeActivity : BaseActivity() {
         }
     }
 
+    // ===== Инициализация RecyclerView с объявлениями =====
     private fun initRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.setHasFixedSize(true)
         recyclerView.setItemViewCacheSize(20)
-        adAdapter = AdAdapter(currentAds) // 🔹 Подключаем currentAds вместо локального объекта
+        adAdapter = AdAdapter(currentAds)
         recyclerView.adapter = adAdapter
     }
 
+    // ===== Поиск =====
     private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
         searchView.isIconified = false
@@ -147,13 +145,9 @@ class HomeActivity : BaseActivity() {
         val color = ContextCompat.getColor(this, R.color.search_icon_color)
 
         searchView.post {
-            val searchIcon =
-                searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
-            searchIcon?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
-
-            val searchEditText =
-                searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)
-            searchEditText?.apply {
+            searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_mag_icon)
+                ?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+            searchView.findViewById<TextView>(androidx.appcompat.R.id.search_src_text)?.apply {
                 setTextColor(color)
                 setHintTextColor(color)
                 textSize = 16f
@@ -161,10 +155,8 @@ class HomeActivity : BaseActivity() {
                 isFocusableInTouchMode = true
                 isCursorVisible = true
             }
-
-            val closeButton =
-                searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
-            closeButton?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+            searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+                ?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -181,8 +173,8 @@ class HomeActivity : BaseActivity() {
         })
     }
 
-    // 🔹 🔹 🔹 Загрузка объявлений с сервера
-    private fun loadAdsFromServer(adRepository: AdRepository) {
+    // ===== Загрузка объявлений с сервера =====
+    private fun loadAdsFromServer() {
         lifecycleScope.launch {
             try {
                 val ads = adRepository.getAds()
@@ -197,8 +189,9 @@ class HomeActivity : BaseActivity() {
         }
     }
 
+    // ===== Фильтрация и поиск =====
     private fun performSearch(query: String) {
-        var result = currentAds.toMutableList() // 🔹 фильтруем currentAds
+        var result = currentAds.toMutableList()
 
         if (query.isNotEmpty()) {
             result = result.filter { ad ->
@@ -211,10 +204,8 @@ class HomeActivity : BaseActivity() {
 
         if (activeDorms.isNotEmpty())
             result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
-
         if (activeCategories.isNotEmpty())
             result = result.filter { ad -> activeCategories.contains(ad.category) }.toMutableList()
-
         if (activeConditions.isNotEmpty())
             result = result.filter { ad -> activeConditions.contains(ad.condition) }.toMutableList()
 
@@ -248,9 +239,15 @@ class HomeActivity : BaseActivity() {
         updateFilterChipsVisibility()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        searchHandler.removeCallbacks(searchRunnable)
+    private fun openFilters() {
+        val intent = Intent(this, FiltersActivity::class.java).apply {
+            putExtra("DORMS", activeDorms.toTypedArray())
+            putExtra("CATEGORIES", activeCategories.toTypedArray())
+            putExtra("CONDITIONS", activeConditions.toTypedArray())
+            putExtra("MIN_PRICE", minPriceFilter?.toString())
+            putExtra("MAX_PRICE", maxPriceFilter?.toString())
+        }
+        filtersLauncher.launch(intent)
     }
 
     override fun onResume() {
@@ -258,6 +255,11 @@ class HomeActivity : BaseActivity() {
         setActiveNavItem(R.id.nav_home)
         val searchView = findViewById<SearchView>(R.id.searchView)
         performSearch(searchView.query.toString())
-        adAdapter.updateAds(currentAds) // 🔹 обновляем currentAds вместо локального объекта
+        adAdapter.updateAds(currentAds)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        searchHandler.removeCallbacks(searchRunnable)
     }
 }
