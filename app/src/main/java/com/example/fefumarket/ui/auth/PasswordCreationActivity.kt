@@ -9,9 +9,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.fefumarket.R
+import com.example.fefumarket.data.models.api.RegisterRequest
+import com.example.fefumarket.data.models.api.RegisterResponse
+import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.network.RetrofitClient
+import kotlinx.coroutines.launch
+import android.util.Log
+import com.example.fefumarket.ui.home.HomeActivity
 
 class PasswordCreationActivity : AppCompatActivity() {
+
+    private lateinit var session: SessionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -21,6 +32,10 @@ class PasswordCreationActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        session = SessionManager(this)
+
+        val emailFromIntent = intent.getStringExtra("EMAIL") ?: ""
 
         val passwordInput = findViewById<EditText>(R.id.password_input)
         val confirmPasswordInput = findViewById<EditText>(R.id.confirm_password_input)
@@ -35,10 +50,30 @@ class PasswordCreationActivity : AppCompatActivity() {
             } else if (password != confirmPassword) {
                 Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Регистрация успешна", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, LoginActivity::class.java)
-                startActivity(intent)
-                finish()
+                // 🔹 Отправка на сервер
+                val api = RetrofitClient.create(this)
+                lifecycleScope.launch {
+                    try {
+                        val response: RegisterResponse = api.register(
+                            RegisterRequest(
+                                email = emailFromIntent,
+                                password = password
+                            )
+                        )
+
+                        // 🔹 Сохраняем токен и email локально
+                        session.saveToken(response.access_token)
+                        session.saveLogin(emailFromIntent)
+
+                        Toast.makeText(this@PasswordCreationActivity, "Регистрация успешна", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@PasswordCreationActivity, HomeActivity::class.java))
+                        finish()
+
+                    } catch (e: Exception) {
+                        Toast.makeText(this@PasswordCreationActivity, "Ошибка регистрации", Toast.LENGTH_SHORT).show()
+                        Log.e("REGISTER", "Registration error", e)
+                    }
+                }
             }
         }
     }

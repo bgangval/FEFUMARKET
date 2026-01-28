@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.fefumarket.R
-import kotlin.random.Random
 
 class EmailInputActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,10 +31,8 @@ class EmailInputActivity : AppCompatActivity() {
             if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(this, "Введите корректный email", Toast.LENGTH_SHORT).show()
             } else {
-                val verificationCode = String.format("%06d", Random.nextInt(1000000))
-                Toast.makeText(this, "Код отправлен: $verificationCode", Toast.LENGTH_LONG).show()
-                val intent = Intent(this, CodeVerificationActivity::class.java)
-                intent.putExtra("VERIFICATION_CODE", verificationCode)
+                // Передаем email в следующую Activity
+                val intent = Intent(this, PasswordCreationActivity::class.java)
                 intent.putExtra("EMAIL", email)
                 startActivity(intent)
                 finish()
