@@ -34,48 +34,46 @@ class MessageActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message)
 
-        // ==== Получаем данные из Intent ====
+        // 🔹 Получаем данные из Intent, переданные из ChatAdapter
         val sellerName = intent.getStringExtra("SELLER_NAME") ?: "Продавец"
         val productName = intent.getStringExtra("PRODUCT_NAME") ?: "Товар"
-        val avatarUri = intent.getStringExtra("AVATAR_URI") ?: ""  // теперь строка
+        val avatarUri = intent.getStringExtra("AVATAR_URI") ?: ""
         chatId = intent.getStringExtra("CHAT_ID") ?: "${sellerName}_$productName"
 
-        // ==== Получаем или создаём чат ====
+        // 🔹 Получаем или создаём чат через MessagesManager
         chat = MessagesManager.getOrCreateChat(chatId, sellerName, productName, avatarUri)
 
-        // ==== Устанавливаем имя и товар в шапку ====
+        // Заголовок чата
         findViewById<TextView>(R.id.chatTitle).text = sellerName
         findViewById<TextView>(R.id.chatSubtitle).text = productName
 
-        // ==== Кнопка "Назад" ====
+        // Кнопка "Назад"
         val backButton = findViewById<ImageView>(R.id.backButton)
         backButton.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // ==== Настройка RecyclerView ====
+        // Настройка RecyclerView для сообщений
         recyclerView = findViewById(R.id.recyclerViewMessages)
         inputMessage = findViewById(R.id.inputMessage)
         sendButton = findViewById(R.id.sendButton)
-
         adapter = MessageAdapter(messages)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // ==== Загрузка последнего сообщения (если есть) ====
+        // 🔹 Загружаем последнее сообщение, если оно есть
         chat.lastMessage.takeIf { it.isNotEmpty() }?.let {
             messages.add(MessageItem(it, isUser = false))
         }
 
-        // ==== Отправка нового сообщения ====
+        // 🔹 Отправка нового сообщения → обновление MessagesManager
         sendButton.setOnClickListener {
             val text = inputMessage.text.toString().trim()
             if (text.isNotEmpty()) {
-                // Добавляем сообщение в список
                 messages.add(MessageItem(text, isUser = true))
                 adapter.notifyItemInserted(messages.size - 1)
                 recyclerView.scrollToPosition(messages.size - 1)
                 inputMessage.text.clear()
 
-                // Обновляем данные в менеджере чатов
+                // 🔹 Обновляем данные чата в MessagesManager
                 MessagesManager.addMessage(chatId, text)
             }
         }
@@ -83,7 +81,6 @@ class MessageActivity : AppCompatActivity() {
         val stickerButton: ImageButton = findViewById(R.id.stickerButton)
         val stickerRecycler: RecyclerView = findViewById(R.id.recyclerViewStickers)
 
-        // Список стикеров (локальные PNG или URL)
         val stickers = listOf(
             R.drawable.sticker1,
             R.drawable.sticker2,
@@ -93,9 +90,8 @@ class MessageActivity : AppCompatActivity() {
             R.drawable.sticker6
         )
 
-        // Настройка RecyclerView стикеров
+        // 🔹 Настройка RecyclerView со стикерами и логика отправки выбранного стикера
         val stickerAdapter = StickerAdapter(stickers) { stickerRes ->
-            // Стикер выбран → добавляем как сообщение
             messages.add(MessageItem(text = null, isUser = true, isSticker = true, stickerRes = stickerRes))
             adapter.notifyItemInserted(messages.size - 1)
             recyclerView.scrollToPosition(messages.size - 1)
@@ -104,7 +100,6 @@ class MessageActivity : AppCompatActivity() {
         stickerRecycler.adapter = stickerAdapter
         stickerRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
-        // Кнопка стикеров
         stickerButton.setOnClickListener {
             if (stickerRecycler.visibility == View.GONE) {
                 hideKeyboard(inputMessage)

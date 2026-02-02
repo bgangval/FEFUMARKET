@@ -23,18 +23,18 @@ class ChatActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
 
-        // Указываем, какой пункт нижней навигации активен
+        // 🔹 Указываем активный пункт нижней навигации
         setActiveNavItem(R.id.nav_chat)
 
         val recyclerView: RecyclerView = findViewById(R.id.chatRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Загружаем все чаты
+        // 🔹 Загружаем все чаты через MessagesManager
         chats = MessagesManager.getAllChats().toMutableList()
         adapter = ChatAdapter(chats)
         recyclerView.adapter = adapter
 
-        // Если пришли из объявления, прокручиваем к нужному чату
+        // 🔹 Если пришли из объявления, прокручиваем к нужному чату
         val chatId = intent.getStringExtra("CHAT_ID")
         chatId?.let { id ->
             val chat = MessagesManager.getAllChats().find { "${it.sellerName}_${it.productName}" == id }
@@ -51,6 +51,7 @@ class ChatActivity : BaseActivity() {
     }
 
     private fun setupSwipe(recyclerView: RecyclerView) {
+        // Свайпы влево/вправо — только визуальные действия, логика между страницами здесь не требуется
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             val deleteIcon: Drawable? = ContextCompat.getDrawable(this@ChatActivity, R.drawable.ic_delete)
             val muteIcon: Drawable? = ContextCompat.getDrawable(this@ChatActivity, R.drawable.ic_mute)
@@ -109,6 +110,7 @@ class ChatActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        // 🔹 Подсветка активного пункта навигации при возврате на экран
         setActiveNavItem(R.id.nav_chat)
     }
 }

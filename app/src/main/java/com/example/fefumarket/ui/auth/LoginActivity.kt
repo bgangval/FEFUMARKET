@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
 
         session = SessionManager(this)
 
-        // Если пользователь уже залогинен – отправляем в HomeActivity
+        // 🔹 Если пользователь уже залогинен, переходим сразу на HomeActivity
         session.getLogin()?.let {
             val intent = Intent(this, HomeActivity::class.java)
             startActivity(intent)
@@ -54,6 +54,7 @@ class LoginActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 try {
+                    // 🔹 Логика авторизации через API
                     val response = api.login(
                         LoginRequest(
                             email = emailText,
@@ -61,13 +62,13 @@ class LoginActivity : AppCompatActivity() {
                         )
                     )
 
-                    // СОХРАНЯЕМ ТОКЕН
+                    // 🔹 Сохраняем токен и логин пользователя в SessionManager
                     session.saveToken(response.access_token)
                     session.saveLogin(emailText)
 
-                    // ЛОГ ДЛЯ ПРОВЕРКИ
                     Log.d("AUTH", "TOKEN = ${response.access_token}")
 
+                    // 🔹 Переходим на главный экран после успешного логина
                     startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                     finish()
 
@@ -83,6 +84,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
+        // 🔹 Переход на экран регистрации (EmailInputActivity)
         register.setOnClickListener {
             val intent = Intent(this, EmailInputActivity::class.java)
             startActivity(intent)

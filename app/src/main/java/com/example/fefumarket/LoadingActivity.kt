@@ -16,17 +16,17 @@ class LoadingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_loading)
 
-        // Полноэкранный режим (скрываем status bar и navigation bar)
+        // 🔹 Полноэкранный режим (скрываем status bar и navigation bar)
         window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                         or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 )
 
-        // Переход на LoginActivity через задержку
+        // 🔹 Переход на LoginActivity через задержку (Splash Screen)
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish() // закрываем Splash, чтобы назад не вернуться
+            startActivity(Intent(this, LoginActivity::class.java)) // 🔹 Логика перехода между страницами
+            finish() // 🔹 Закрываем Splash, чтобы пользователь не мог вернуться назад
         }, splashDelay)
     }
 }

@@ -12,7 +12,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.fefumarket.R
 
+// Экран проверки кода в процессе регистрации/восстановления пароля
 class CodeVerificationActivity : AppCompatActivity() {
+
     private var verificationCode: String? = null
     private val TAG = "CodeVerificationActivity"
 
@@ -20,25 +22,28 @@ class CodeVerificationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_code_verification)
+
+        // Обрабатываем отступы для системных панелей
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // Получаем код из Intent
+        // Получаем код и email из Intent
         verificationCode = intent.getStringExtra("VERIFICATION_CODE")
+        val email = intent.getStringExtra("EMAIL")
         Log.d(TAG, "Received verificationCode: $verificationCode")
-        Log.d(TAG, "Received email: ${intent.getStringExtra("EMAIL")}")
+        Log.d(TAG, "Received email: $email")
 
         val codeInput = findViewById<EditText>(R.id.code_input)
         val verifyButton = findViewById<Button>(R.id.verify_code_button)
 
+        // Проверка кода по нажатию кнопки
         verifyButton.setOnClickListener {
             val enteredCode = codeInput.text.toString().trim()
             Log.d(TAG, "Entered code: $enteredCode")
             if (enteredCode == verificationCode) {
-                val email = intent.getStringExtra("EMAIL")
                 if (email != null) {
                     val intent = Intent(this, PasswordCreationActivity::class.java)
                     intent.putExtra("EMAIL", email)

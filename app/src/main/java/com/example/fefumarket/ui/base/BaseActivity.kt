@@ -14,10 +14,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 open class BaseActivity : AppCompatActivity() {
 
-    // Текущий пункт навигации
+    // 🔹 Текущий выбранный пункт нижней навигации
     protected var currentNavId: Int = R.id.nav_home
 
-    // Порядок пунктов для определения направления анимации
+    // Порядок пунктов для определения направления анимации перехода
     private val navOrder = listOf(
         R.id.nav_home,
         R.id.nav_favorites,
@@ -40,8 +40,10 @@ open class BaseActivity : AppCompatActivity() {
         bottomNavigation.setOnItemSelectedListener { item ->
             if (item.itemId == currentNavId) return@setOnItemSelectedListener true
 
+            // 🔹 Определяем направление анимации (вперед/назад) в зависимости от позиции в меню
             val forward = navOrder.indexOf(item.itemId) > navOrder.indexOf(currentNavId)
 
+            // 🔹 Определяем, на какой экран переходим при клике
             val targetActivity = when (item.itemId) {
                 R.id.nav_home -> HomeActivity::class.java
                 R.id.nav_favorites -> FavoritesActivity::class.java
@@ -54,9 +56,11 @@ open class BaseActivity : AppCompatActivity() {
             targetActivity?.let { cls ->
                 val intent = Intent(this, cls)
                 intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+                // 🔹 Запуск целевой Activity при выборе пункта навигации
                 startActivity(intent)
 
-                // Анимация перехода
+                // 🔹 Анимация перехода между экранами
                 if (forward) {
                     overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 } else {
@@ -67,7 +71,7 @@ open class BaseActivity : AppCompatActivity() {
         }
     }
 
-    /** Дочерние Activity вызывают в onResume() для подсветки */
+    /** 🔹 Дочерние Activity вызывают в onResume() для подсветки активного пункта меню */
     protected fun setActiveNavItem(activeId: Int) {
         currentNavId = activeId
         findViewById<BottomNavigationView>(R.id.bottomNavigation)?.selectedItemId = activeId

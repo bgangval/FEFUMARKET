@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
+import com.example.fefumarket.ui.ad.AddPostActivity
 import com.example.fefumarket.data.repository.AdRepository
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.data.utils.GridSpacingItemDecoration
@@ -17,6 +18,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// Экран "Мои объявления"
+// Отображает все объявления текущего пользователя в виде сетки
+// Позволяет перейти к добавлению нового объявления или редактированию существующего
 class MyPostsActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
@@ -34,7 +38,7 @@ class MyPostsActivity : BaseActivity() {
         recyclerView = findViewById(R.id.myPostsRecyclerView)
         btnAddPost = findViewById(R.id.btnAddPost)
 
-        // 🔹 SessionManager
+        // 🔹 Получаем данные о текущем пользователе
         sessionManager = SessionManager(this)
         currentUser = sessionManager.getUserName() ?: ""
 
@@ -42,11 +46,12 @@ class MyPostsActivity : BaseActivity() {
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
 
+        // Кнопка добавления нового объявления
         btnAddPost.setOnClickListener {
             startActivity(Intent(this, AddPostActivity::class.java))
         }
 
-        // Сетка 2 в ряд
+        // Настройка RecyclerView как сетки с 2 колонками
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         val spacingPx = (16 * resources.displayMetrics.density).toInt()
         recyclerView.addItemDecoration(GridSpacingItemDecoration(2, spacingPx, true))
@@ -57,19 +62,21 @@ class MyPostsActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        setActiveNavItem(R.id.nav_add)
+        setActiveNavItem(R.id.nav_add) // 🔹 Активный элемент навигации
         loadMyAds() // обновляем список после возвращения
     }
 
+    // 🔹 Загрузка объявлений текущего пользователя через AdRepository
     private fun loadMyAds() {
         CoroutineScope(Dispatchers.IO).launch {
-            val allAds = adRepository.getAds()
-            val myAds = allAds.filter { it.seller == currentUser }.toMutableList()
+            val allAds = adRepository.getAds() // получаем все объявления
+            val myAds = allAds.filter { it.seller == currentUser }.toMutableList() // фильтруем по текущему пользователю
 
             withContext(Dispatchers.Main) {
                 if (::adapter.isInitialized) {
                     adapter.updateList(myAds)
                 } else {
+                    // Инициализация адаптера с обработчиком клика для редактирования
                     adapter = MyPostsAdapter(myAds) { ad ->
                         val intent = Intent(this@MyPostsActivity, EditPostActivity::class.java)
                         intent.putExtra("AD_TITLE", ad.title)

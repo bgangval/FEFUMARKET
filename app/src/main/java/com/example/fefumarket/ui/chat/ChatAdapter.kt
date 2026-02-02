@@ -32,7 +32,7 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
         val chat = chats[position]
 
-        // ✅ Загружаем avatarUri в ImageView
+        // 🔹 Загружаем аватар и данные чата
         Glide.with(holder.itemView.context)
             .load(chat.avatarUri.toUri())
             .placeholder(R.drawable.ic_camera)
@@ -49,6 +49,7 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
         holder.muteIcon.alpha = if (chat.isMuted) 1f else 0f
         holder.muteIcon.visibility = View.VISIBLE
 
+        // 🔹 Клик по элементу чата → открываем MessageActivity и передаем все нужные данные
         holder.itemView.setOnClickListener {
             val context = it.context
             val intent = Intent(context, MessageActivity::class.java).apply {

@@ -1,5 +1,6 @@
 package com.example.fefumarket.data.models.api
 
+// Модель данных объявления, получаемая напрямую из API сервера
 data class AdResponse(
     val id: Int,
     val title: String,

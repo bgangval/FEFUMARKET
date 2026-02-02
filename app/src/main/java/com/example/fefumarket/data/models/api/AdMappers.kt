@@ -2,7 +2,11 @@ package com.example.fefumarket.data.models.api
 
 import com.example.fefumarket.data.models.Ad
 
-fun AdResponse.toAd(sellerName: String, dorm: String = ""): Ad {
+// Преобразование AdResponse в модель Ad для использования в приложении
+fun AdResponse.toAd(
+    sellerName: String,
+    dorm: String = ""
+): Ad {
     return Ad(
         id = id.toString(),
         title = title,
@@ -12,7 +16,7 @@ fun AdResponse.toAd(sellerName: String, dorm: String = ""): Ad {
         description = description,
         category = "",
         condition = "",
-        imageUris = listOf(),
+        imageUris = emptyList(),
         isSold = false
     )
 }

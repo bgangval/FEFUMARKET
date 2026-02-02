@@ -1,141 +1,185 @@
 package com.example.fefumarket.ui.ad
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
-import android.widget.*
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.FavoritesManager
+import com.example.fefumarket.data.repository.MessagesManager
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.network.RetrofitClient
-import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.fefumarket.ui.chat.MessageActivity
 import kotlinx.coroutines.launch
-import java.util.UUID
 
-class AddPostActivity : AppCompatActivity() {
+// Экран детального просмотра объявления
+// Отображает информацию о товаре, фотографии, управление избранным,
+// возможность открыть чат с продавцом и поделиться объявлением через deep link
+class AdDetailActivity : AppCompatActivity() {
 
+    private lateinit var ad: Ad
     private lateinit var photoPager: ViewPager2
-    private lateinit var btnAddPhoto: ImageButton
-    private lateinit var etTitle: EditText
-    private lateinit var etPrice: EditText
-    private lateinit var etDescription: EditText
-    private lateinit var spinnerDorm: Spinner
-    private lateinit var spinnerCategory: Spinner
-    private lateinit var spinnerCondition: Spinner
-    private lateinit var btnSave: MaterialButton
-
-    private val dorms = listOf(
-        "Город", "РГИСИ",
-        "Корпус 1.8", "Корпус 1.9", "Корпус 1.10", "Корпус 1.11",
-        "Корпус 1.12", "Корпус 1.13", "Корпус 2.1", "Корпус 2.2",
-        "Корпус 2.3", "Корпус 2.4", "Корпус 2.5", "Корпус 2.6",
-        "Корпус 2.7", "Корпус 4", "Корпус 5", "Корпус 6.1",
-        "Корпус 6.2", "Корпус 7.1", "Корпус 7.2", "Корпус 8.1",
-        "Корпус 8.2", "Корпус 9", "Корпус 10", "Корпус 11"
-    )
-
-    private val categories = listOf(
-        "Одежда", "Обувь", "Техника", "Бьюти",
-        "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
-    )
-
-    private val conditions = listOf("Новое", "Б/у")
-
-    private val photoList = mutableListOf<Uri>()
+    private lateinit var adTitle: TextView
+    private lateinit var adPrice: TextView
+    private lateinit var adDorm: TextView
+    private lateinit var adDescription: TextView
+    private lateinit var adCategory: TextView
+    private lateinit var adCondition: TextView
+    private lateinit var btnFavoriteTop: ImageButton
 
     private lateinit var adRepository: AdRepository
-    private lateinit var sessionManager: SessionManager
-
-    // Выбор нескольких фото
-    private val pickImagesLauncher = registerForActivityResult(
-        ActivityResultContracts.GetMultipleContents()
-    ) { uris: List<Uri> ->
-        if (uris.isNotEmpty()) {
-            photoList.clear()
-            photoList.addAll(uris)
-            photoPager.adapter?.notifyDataSetChanged()
-        }
-    }
+    private lateinit var sessionManager: SessionManager // 🔹 SessionManager для AdRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_post)
+        setContentView(R.layout.activity_ad_detail)
 
-        // 🔹 Инициализация SessionManager и AdRepository
-        sessionManager = SessionManager(this)
-        val api = RetrofitClient.create(this)
-        adRepository = AdRepository(api, sessionManager)
-
-        // UI
+        // ---------- Инициализация UI ----------
         photoPager = findViewById(R.id.photoPager)
-        btnAddPhoto = findViewById(R.id.btnAddPhoto)
-        etTitle = findViewById(R.id.etTitle)
-        etPrice = findViewById(R.id.etPrice)
-        etDescription = findViewById(R.id.etDescription)
-        spinnerDorm = findViewById(R.id.spinnerDorm)
-        spinnerCategory = findViewById(R.id.spinnerCategory)
-        spinnerCondition = findViewById(R.id.spinnerCondition)
-        btnSave = findViewById(R.id.btnSave)
+        adTitle = findViewById(R.id.titleText)
+        adPrice = findViewById(R.id.priceText)
+        adDorm = findViewById(R.id.dormText)
+        adDescription = findViewById(R.id.descriptionText)
+        btnFavoriteTop = findViewById(R.id.btnFavoriteTop)
+        adCategory = findViewById(R.id.categoryText)
+        adCondition = findViewById(R.id.conditionText)
 
-        findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
+        val btnBack: ImageButton = findViewById(R.id.btnBack)
+        val btnFavorite: Button = findViewById(R.id.favoriteButton)
+        val btnChat: Button = findViewById(R.id.contactButton)
+        val btnShareTop: ImageButton = findViewById(R.id.btnChatTop)
 
-        photoPager.adapter = PhotoPagerAdapter(photoList)
-        btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
+        // ---------- Создание SessionManager и репозитория ----------
+        sessionManager = SessionManager(this)
+        adRepository = AdRepository(RetrofitClient.create(this), sessionManager)
 
-        spinnerDorm.adapter = whiteTextAdapter(dorms)
-        spinnerCategory.adapter = whiteTextAdapter(categories)
-        spinnerCondition.adapter = whiteTextAdapter(conditions)
+        // ---------- Получение ID объявления ----------
+        val adIdFromIntent = intent.getStringExtra("AD_ID")
+        val adIdFromDeepLink = intent?.data?.lastPathSegment
+        val resolvedId = adIdFromIntent ?: adIdFromDeepLink
 
-        btnSave.setOnClickListener { saveAd() }
-    }
-
-    private fun saveAd() {
-        val title = etTitle.text.toString().trim()
-        val priceText = etPrice.text.toString().trim()
-        val dorm = spinnerDorm.selectedItem?.toString()?.trim() ?: ""
-        val description = etDescription.text.toString().trim()
-        val category = spinnerCategory.selectedItem?.toString()?.trim() ?: ""
-        val condition = spinnerCondition.selectedItem?.toString()?.trim() ?: ""
-
-        if (title.isEmpty() || priceText.isEmpty()) {
-            Toast.makeText(this, "Введите название и цену", Toast.LENGTH_SHORT).show()
+        if (resolvedId == null) {
+            Toast.makeText(this, "Ошибка загрузки объявления", Toast.LENGTH_SHORT).show()
+            finish()
             return
         }
 
-        val seller = sessionManager.getUserName()?.takeIf { it.isNotBlank() } ?: sessionManager.getLogin() ?: "Без имени"
-
-        val newAd = Ad(
-            id = UUID.randomUUID().toString(),
-            title = title,
-            price = "₽$priceText",
-            dorm = dorm,
-            seller = seller,
-            description = description,
-            category = category,
-            condition = condition,
-            imageUris = photoList.map { it.toString() }
-        )
-
-        // 🔹 Добавление через репозиторий
-        CoroutineScope(Dispatchers.IO).launch {
-            adRepository.addAd(newAd)
-            runOnUiThread {
-                Toast.makeText(this@AddPostActivity, "Объявление опубликовано", Toast.LENGTH_SHORT).show()
+        // ---------- Загрузка объявления с использованием репозитория ----------
+        lifecycleScope.launch {
+            val foundAd = adRepository.getAdById(resolvedId)
+            if (foundAd == null) {
+                Toast.makeText(this@AdDetailActivity, "Объявление не найдено", Toast.LENGTH_SHORT).show()
                 finish()
+                return@launch
+            }
+            ad = foundAd
+            updateUI()
+        }
+
+        // ---------- Настройка кнопок ----------
+        // btnBack — возвращение на предыдущий экран
+        btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+
+        // btnFavoriteTop / btnFavorite — добавление/удаление объявления из избранного через FavoritesManager
+        var isFavorite = false
+        btnFavoriteTop.setOnClickListener {
+            isFavorite = !isFavorite
+            if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
+            updateFavoriteIcon(btnFavoriteTop, isFavorite)
+        }
+        btnFavorite.setOnClickListener {
+            isFavorite = !isFavorite
+            if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
+            updateFavoriteIcon(btnFavoriteTop, isFavorite)
+        }
+
+        // btnChat — открытие чата через MessagesManager
+        btnChat.setOnClickListener { openChat() }
+
+        // btnShareTop — создание deep link и вызов стандартного Share Intent
+        btnShareTop.setOnClickListener { shareAd() }
+    }
+
+    // ---------- Обновление объявления при возврате на экран ----------
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            val updatedAd = adRepository.getAdById(ad.id) // проверяем актуальность объявления
+            if (updatedAd != null) {
+                ad = updatedAd
+                updateUI()
             }
         }
     }
 
-    // ===== Адаптер для фото =====
+    // ---------- Вспомогательные методы ----------
+
+    // Обновление UI элементов с данными объявления
+    private fun updateUI() {
+        adTitle.text = ad.title
+        adPrice.text = ad.price
+        adDorm.text = ad.dorm
+        adDescription.text = ad.description
+        adCategory.text = ad.category
+        adCondition.text = ad.condition
+
+        val photos: List<Uri> =
+            if (ad.imageUris.isNotEmpty())
+                ad.imageUris.map { it.toUri() }
+            else
+                listOf(Uri.parse("android.resource://${packageName}/${R.drawable.ic_camera}"))
+
+        photoPager.adapter = PhotoPagerAdapter(photos)
+    }
+
+    // Обновление иконки "избранного"
+    private fun updateFavoriteIcon(button: ImageButton, isFavorite: Boolean) {
+        button.setImageResource(
+            if (isFavorite) R.drawable.ic_heart_red
+            else R.drawable.ic_heart_top_bar
+        )
+    }
+
+    // 🔹 Логика чата между слоями: MessagesManager ↔ MessageActivity
+    private fun openChat() {
+        val chatId = "${ad.seller}_${ad.id}"
+        val avatar = ad.imageUris.firstOrNull() ?: ""
+        MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, avatar)
+
+        val intent = Intent(this, MessageActivity::class.java).apply {
+            putExtra("CHAT_ID", chatId)
+            putExtra("SELLER_NAME", ad.seller)
+            putExtra("PRODUCT_NAME", ad.title)
+            putExtra("AVATAR_URI", avatar)
+        }
+        startActivity(intent)
+    }
+
+    // 🔹 Поделиться объявлением через deep link
+    private fun shareAd() {
+        val deepLink = Uri.parse("fefumarket://ad/${ad.id}")
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "Смотри объявление: $deepLink")
+        }
+        startActivity(Intent.createChooser(sendIntent, "Поделиться объявлением"))
+    }
+
+    // ---------- Адаптер для ViewPager ----------
+    // Отображает фотографии объявления
     inner class PhotoPagerAdapter(private val photos: List<Uri>) :
         RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
 
@@ -150,44 +194,14 @@ class AddPostActivity : AppCompatActivity() {
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                setBackgroundColor(resources.getColor(R.color.light_gray, null))
             }
             return PhotoViewHolder(imageView)
         }
 
         override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
-            Glide.with(holder.imageView)
-                .load(photos[position])
-                .placeholder(R.drawable.ic_camera)
-                .centerCrop()
-                .into(holder.imageView)
+            Glide.with(holder.imageView).load(photos[position]).into(holder.imageView)
         }
 
         override fun getItemCount(): Int = photos.size
-    }
-
-    // ===== Белый адаптер для Spinner =====
-    private fun whiteTextAdapter(items: List<String>): ArrayAdapter<String> {
-        return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val view = super.getView(position, convertView, parent)
-                (view as TextView).apply {
-                    setTextColor(resources.getColor(R.color.white, null))
-                    textSize = 16f
-                }
-                return view
-            }
-
-            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val view = super.getDropDownView(position, convertView, parent)
-                (view as TextView).apply {
-                    setTextColor(resources.getColor(R.color.white, null))
-                    setBackgroundColor(resources.getColor(R.color.bg, null))
-                }
-                return view
-            }
-        }.apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
     }
 }

@@ -38,11 +38,7 @@ class FiltersActivity : AppCompatActivity() {
         "Барахло"
     )
 
-    private val conditions = listOf(
-        "Новое",
-        "Б/у",
-        "Любое"
-    )
+    private val conditions = listOf("Новое", "Б/у", "Любое")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,11 +53,12 @@ class FiltersActivity : AppCompatActivity() {
         val applyButton: MaterialButton = findViewById(R.id.applyFiltersButton)
         val resetButton: MaterialButton = findViewById(R.id.resetFiltersButton)
 
+        // Инициализация списков выбранных фильтров
         dorms.forEach { selectedDorms.add(false) }
         categories.forEach { selectedCategories.add(false) }
         conditions.forEach { selectedConditions.add(false) }
 
-        // Загружаем переданные фильтры и отмечаем их
+        // 🔹 Получение текущих фильтров из Intent, если активити открыта для редактирования фильтров
         intent?.let {
             val currentDorms = it.getStringArrayExtra("DORMS") ?: emptyArray()
             val currentCategories = it.getStringArrayExtra("CATEGORIES") ?: emptyArray()
@@ -83,28 +80,26 @@ class FiltersActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // Диалог выбора корпусов
+        // Диалоги выбора фильтров
         dormSelectText.setOnClickListener {
             showMultiChoiceDialog("Выберите корпуса", dorms, selectedDorms) { selected ->
                 dormSelectText.text = if (selected.isEmpty()) "Выберите корпуса" else selected.joinToString(", ")
             }
         }
 
-        // Диалог выбора категорий
         categorySelectText.setOnClickListener {
             showMultiChoiceDialog("Выберите категории", categories, selectedCategories) { selected ->
                 categorySelectText.text = if (selected.isEmpty()) "Выберите категории" else selected.joinToString(", ")
             }
         }
 
-        // Диалог выбора состояния
         conditionSelectText.setOnClickListener {
             showMultiChoiceDialog("Выберите состояние", conditions, selectedConditions) { selected ->
                 conditionSelectText.text = if (selected.isEmpty()) "Выберите состояние" else selected.joinToString(", ")
             }
         }
 
-        // Кнопка "Сброс"
+        // Кнопка "Сброс" фильтров
         resetButton.setOnClickListener {
             for (i in selectedDorms.indices) selectedDorms[i] = false
             for (i in selectedCategories.indices) selectedCategories[i] = false
@@ -118,17 +113,16 @@ class FiltersActivity : AppCompatActivity() {
             maxPriceInput.text.clear()
         }
 
-        // Кнопка "Применить"
+        // 🔹 Кнопка "Применить" фильтры
         applyButton.setOnClickListener {
-            val selectedDormNames = dorms.filterIndexed { index, dorm ->
-                selectedDorms[index] && dorm != "Любой"
-            }
-            val selectedCategoryNames = categories.filterIndexed { index, cat -> selectedCategories[index] && cat != "Любая" }  // Уже ок
-            val selectedConditionNames = conditions.filterIndexed { index, cond -> selectedConditions[index] && cond != "Любое" }  // Уже ок
+            val selectedDormNames = dorms.filterIndexed { index, dorm -> selectedDorms[index] && dorm != "Любой" }
+            val selectedCategoryNames = categories.filterIndexed { index, cat -> selectedCategories[index] && cat != "Любая" }
+            val selectedConditionNames = conditions.filterIndexed { index, cond -> selectedConditions[index] && cond != "Любое" }
 
             val minPrice = minPriceInput.text.toString()
             val maxPrice = maxPriceInput.text.toString()
 
+            // 🔹 Отправка выбранных фильтров обратно в HomeActivity через Intent
             val resultIntent = Intent().apply {
                 putExtra("DORMS", selectedDormNames.toTypedArray())
                 putExtra("CATEGORIES", selectedCategoryNames.toTypedArray())
@@ -137,12 +131,13 @@ class FiltersActivity : AppCompatActivity() {
                 putExtra("MAX_PRICE", maxPrice)
             }
 
-            setResult(RESULT_OK, resultIntent)
+            setResult(RESULT_OK, resultIntent)  // 🔹 установка результата для HomeActivity
             Toast.makeText(this, "Фильтры применены", Toast.LENGTH_SHORT).show()
-            finish()
+            finish() // закрываем FiltersActivity
         }
     }
 
+    // Вспомогательный метод для отображения диалога с множественным выбором
     private fun showMultiChoiceDialog(
         title: String,
         items: List<String>,
@@ -169,6 +164,7 @@ class FiltersActivity : AppCompatActivity() {
         val dialog = builder.create()
         dialog.show()
 
+        // Настройка цветов кнопок и текста
         dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(resources.getColor(android.R.color.white, null))
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(resources.getColor(android.R.color.white, null))
 

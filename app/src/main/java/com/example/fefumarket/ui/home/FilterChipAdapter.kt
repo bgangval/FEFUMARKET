@@ -10,8 +10,8 @@ import com.example.fefumarket.R
 
 class FilterChipAdapter(
     private val filters: MutableList<String>,
-    private val onRemove: (String) -> Unit,
-    private val onListChanged: () -> Unit
+    private val onRemove: (String) -> Unit, // 🔹 callback для удаления фильтра в HomeActivity
+    private val onListChanged: () -> Unit    // 🔹 уведомление HomeActivity о смене списка фильтров
 ) : RecyclerView.Adapter<FilterChipAdapter.FilterViewHolder>() {
 
     class FilterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -30,10 +30,13 @@ class FilterChipAdapter(
 
         holder.text.text = filter
 
+        // 🔹 Удаление фильтра при клике на крестик
         holder.remove.setOnClickListener {
             val removed = filters[position]
             filters.removeAt(position)
             notifyItemRemoved(position)
+
+            // 🔹 callback для HomeActivity — синхронизация данных фильтров
             onRemove(removed)
             onListChanged()  // уведомляем HomeActivity, что список изменился
         }
@@ -41,10 +44,13 @@ class FilterChipAdapter(
 
     override fun getItemCount(): Int = filters.size
 
+    // 🔹 Обновление списка фильтров и уведомление HomeActivity
     fun updateFilters(newFilters: List<String>) {
         filters.clear()
         filters.addAll(newFilters)
         notifyDataSetChanged()
-        onListChanged() // уведомляем HomeActivity после обновления
+
+        // 🔹 уведомление HomeActivity после полной замены списка
+        onListChanged()
     }
 }

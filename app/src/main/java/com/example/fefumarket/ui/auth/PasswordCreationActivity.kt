@@ -50,7 +50,7 @@ class PasswordCreationActivity : AppCompatActivity() {
             } else if (password != confirmPassword) {
                 Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
             } else {
-                // 🔹 Отправка на сервер
+                // 🔹 Отправка данных регистрации на сервер через API
                 val api = RetrofitClient.create(this)
                 lifecycleScope.launch {
                     try {
@@ -61,10 +61,11 @@ class PasswordCreationActivity : AppCompatActivity() {
                             )
                         )
 
-                        // 🔹 Сохраняем токен и email локально
+                        // 🔹 Сохраняем токен и email локально для последующего входа
                         session.saveToken(response.access_token)
                         session.saveLogin(emailFromIntent)
 
+                        // 🔹 После успешной регистрации — переходим на главный экран
                         Toast.makeText(this@PasswordCreationActivity, "Регистрация успешна", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@PasswordCreationActivity, HomeActivity::class.java))
                         finish()

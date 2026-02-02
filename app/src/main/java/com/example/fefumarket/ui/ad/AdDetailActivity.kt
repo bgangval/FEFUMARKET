@@ -25,6 +25,9 @@ import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.ui.chat.MessageActivity
 import kotlinx.coroutines.launch
 
+// Экран детального просмотра объявления
+// Отображает информацию о товаре, фотографии, управление избранным,
+// возможность открыть чат с продавцом и поделиться объявлением через deep link
 class AdDetailActivity : AppCompatActivity() {
 
     private lateinit var ad: Ad
@@ -44,7 +47,7 @@ class AdDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ad_detail)
 
-        // ---------- UI ----------
+        // ---------- Инициализация UI ----------
         photoPager = findViewById(R.id.photoPager)
         adTitle = findViewById(R.id.titleText)
         adPrice = findViewById(R.id.priceText)
@@ -59,16 +62,11 @@ class AdDetailActivity : AppCompatActivity() {
         val btnChat: Button = findViewById(R.id.contactButton)
         val btnShareTop: ImageButton = findViewById(R.id.btnChatTop)
 
-        // ---------- Создаём SessionManager ----------
+        // ---------- Создание SessionManager и репозитория ----------
         sessionManager = SessionManager(this)
+        adRepository = AdRepository(RetrofitClient.create(this), sessionManager)
 
-        // ---------- Создаём репозиторий с session ----------
-        adRepository = AdRepository(
-            RetrofitClient.create(this), // ApiService
-            sessionManager
-        )
-
-        // ---------- Получаем ID объявления ----------
+        // ---------- Получение ID объявления ----------
         val adIdFromIntent = intent.getStringExtra("AD_ID")
         val adIdFromDeepLink = intent?.data?.lastPathSegment
         val resolvedId = adIdFromIntent ?: adIdFromDeepLink
@@ -79,7 +77,7 @@ class AdDetailActivity : AppCompatActivity() {
             return
         }
 
-        // ---------- Загружаем объявление асинхронно ----------
+        // ---------- Загрузка объявления с использованием репозитория ----------
         lifecycleScope.launch {
             val foundAd = adRepository.getAdById(resolvedId)
             if (foundAd == null) {
@@ -91,35 +89,35 @@ class AdDetailActivity : AppCompatActivity() {
             updateUI()
         }
 
-        // ---------- Кнопка "Назад" ----------
+        // ---------- Настройка кнопок ----------
+        // btnBack — возвращение на предыдущий экран
         btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // ---------- Избранное ----------
+        // btnFavoriteTop / btnFavorite — добавление/удаление объявления из избранного через FavoritesManager
         var isFavorite = false
         btnFavoriteTop.setOnClickListener {
             isFavorite = !isFavorite
             if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
             updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
-
         btnFavorite.setOnClickListener {
             isFavorite = !isFavorite
             if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
             updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
 
-        // ---------- Чат ----------
+        // btnChat — открытие чата через MessagesManager
         btnChat.setOnClickListener { openChat() }
 
-        // ---------- Поделиться ----------
+        // btnShareTop — создание deep link и вызов стандартного Share Intent
         btnShareTop.setOnClickListener { shareAd() }
     }
 
-    // ---------- Обновление объявления при возврате ----------
+    // ---------- Обновление объявления при возврате на экран ----------
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
-            val updatedAd = adRepository.getAdById(ad.id)
+            val updatedAd = adRepository.getAdById(ad.id) // проверяем актуальность объявления
             if (updatedAd != null) {
                 ad = updatedAd
                 updateUI()
@@ -127,6 +125,9 @@ class AdDetailActivity : AppCompatActivity() {
         }
     }
 
+    // ---------- Вспомогательные методы ----------
+
+    // Обновление UI элементов с данными объявления
     private fun updateUI() {
         adTitle.text = ad.title
         adPrice.text = ad.price
@@ -144,6 +145,7 @@ class AdDetailActivity : AppCompatActivity() {
         photoPager.adapter = PhotoPagerAdapter(photos)
     }
 
+    // Обновление иконки "избранного"
     private fun updateFavoriteIcon(button: ImageButton, isFavorite: Boolean) {
         button.setImageResource(
             if (isFavorite) R.drawable.ic_heart_red
@@ -151,6 +153,7 @@ class AdDetailActivity : AppCompatActivity() {
         )
     }
 
+    // 🔹 Логика чата между слоями: MessagesManager ↔ MessageActivity
     private fun openChat() {
         val chatId = "${ad.seller}_${ad.id}"
         val avatar = ad.imageUris.firstOrNull() ?: ""
@@ -165,6 +168,7 @@ class AdDetailActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    // 🔹 Поделиться объявлением через deep link
     private fun shareAd() {
         val deepLink = Uri.parse("fefumarket://ad/${ad.id}")
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -175,6 +179,7 @@ class AdDetailActivity : AppCompatActivity() {
     }
 
     // ---------- Адаптер для ViewPager ----------
+    // Отображает фотографии объявления
     inner class PhotoPagerAdapter(private val photos: List<Uri>) :
         RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
 

@@ -28,31 +28,34 @@ class FavoritesActivity : BaseActivity() {
         recyclerView = findViewById(R.id.favoritesRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // 🔹 Инициализация session и репозитория
+        // 🔹 Инициализация session и репозитория для взаимодействия с сервером
         sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
 
+        // 🔹 Настраиваем адаптер для RecyclerView с пустым списком, будет обновляться при onResume
         adapter = FavoriteAdapter(mutableListOf())
         recyclerView.adapter = adapter
     }
 
+    // 🔹 Обновление списка избранного с проверкой существования объявлений на сервере
     private fun updateFavoritesList() {
         CoroutineScope(Dispatchers.IO).launch {
-            val allAds = adRepository.getAds() // все объявления с репозитория
-            val favoriteAds = FavoritesManager.getAll()
+            val allAds = adRepository.getAds() // получаем все объявления с репозитория
+            val favoriteAds = FavoritesManager.getAll() // получаем список избранного локально
 
             val updatedList = favoriteAds.mapNotNull { favAd ->
-                allAds.find { it.id == favAd.id } // берем только реальные объявления
+                allAds.find { it.id == favAd.id } // оставляем только реально существующие объявления
             }.toMutableList()
 
-            // Если какие-то избранные больше не существуют, удаляем их из FavoritesManager
+            // 🔹 Удаляем из FavoritesManager те объявления, которых больше нет на сервере
             favoriteAds.forEach { favAd ->
                 if (updatedList.none { it.id == favAd.id }) {
                     FavoritesManager.remove(favAd)
                 }
             }
 
+            // 🔹 Обновляем UI в главном потоке
             withContext(Dispatchers.Main) {
                 adapter.items.clear()
                 adapter.items.addAll(updatedList)
@@ -63,7 +66,9 @@ class FavoritesActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        // 🔹 Подсвечиваем пункт нижней навигации
         setActiveNavItem(R.id.nav_favorites)
+        // 🔹 Обновляем список избранного каждый раз при возвращении на экран
         updateFavoritesList()
     }
 }

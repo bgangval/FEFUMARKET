@@ -49,16 +49,20 @@ class HomeActivity : BaseActivity() {
     private val searchHandler = Handler(Looper.getMainLooper())
     private val searchRunnable = Runnable { performSearch("") }
 
+    // 🔹 Лаунчер для FiltersActivity, чтобы получить выбранные фильтры
     private val filtersLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK && result.data != null) {
                 val data = result.data!!
+
+                // 🔹 Обновление активных фильтров после выбора в FiltersActivity
                 activeDorms = data.getStringArrayExtra("DORMS")?.toList() ?: emptyList()
                 activeCategories = data.getStringArrayExtra("CATEGORIES")?.toList() ?: emptyList()
                 activeConditions = data.getStringArrayExtra("CONDITIONS")?.toList() ?: emptyList()
                 minPriceFilter = data.getStringExtra("MIN_PRICE")?.toIntOrNull()
                 maxPriceFilter = data.getStringExtra("MAX_PRICE")?.toIntOrNull()
 
+                // 🔹 Обновление списка чипсов (RecyclerView с фильтрами)
                 val allFilters = mutableListOf<String>()
                 allFilters.addAll(activeDorms)
                 allFilters.addAll(activeCategories)
@@ -68,6 +72,8 @@ class HomeActivity : BaseActivity() {
 
                 filterChipAdapter.updateFilters(allFilters)
                 updateFilterChipsVisibility()
+
+                // 🔹 Перефильтровка объявлений после изменения фильтров
                 performSearch("")
             }
         }
@@ -76,28 +82,37 @@ class HomeActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // 🔹 Инициализация SessionManager
+        // 🔹 Проверка авторизации пользователя
         session = SessionManager(this)
         if (session.getLogin() == null) {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, LoginActivity::class.java)) // Переход на экран логина
             finish()
             return
         }
 
-        // 🔹 Инициализация AdRepository с session
+        // 🔹 Инициализация репозитория объявлений с текущей сессией
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, session)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        // 🔹 Инициализация RecyclerView с фильтрами (чипсы)
         initFilterChips()
+
+        // 🔹 Инициализация основной сетки объявлений
         initRecyclerView()
+
+        // 🔹 Настройка нижней навигации
         setupBottomNavigation()
+
+        // 🔹 Настройка поиска по объявлениям
         setupSearchView()
 
+        // 🔹 Кнопка открытия FiltersActivity
         val btnFilter: ImageButton = findViewById(R.id.btnFilter)
         btnFilter.setOnClickListener { openFilters() }
 
+        // 🔹 Загрузка объявлений с сервера
         loadAdsFromServer()
     }
 
@@ -107,7 +122,7 @@ class HomeActivity : BaseActivity() {
         filterChipAdapter = FilterChipAdapter(
             mutableListOf(),
             onRemove = { removed ->
-                removeFilterValue(removed)
+                removeFilterValue(removed) // удаление фильтра и обновление списка
                 performSearch("")
             },
             onListChanged = { updateFilterChipsVisibility() }
@@ -135,7 +150,7 @@ class HomeActivity : BaseActivity() {
         recyclerView.adapter = adAdapter
     }
 
-    // ===== Поиск =====
+    // ===== Настройка поиска =====
     private fun setupSearchView() {
         val searchView = findViewById<SearchView>(R.id.searchView)
         searchView.isIconified = false
@@ -159,15 +174,16 @@ class HomeActivity : BaseActivity() {
                 ?.setColorFilter(color, PorterDuff.Mode.SRC_IN)
         }
 
+        // 🔹 Обработчики текста поиска
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                performSearch(query.orEmpty())
+                performSearch(query.orEmpty()) // поиск при нажатии Enter
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 searchHandler.removeCallbacks(searchRunnable)
-                searchHandler.postDelayed({ performSearch(newText.orEmpty()) }, 300)
+                searchHandler.postDelayed({ performSearch(newText.orEmpty()) }, 300) // поиск с задержкой
                 return true
             }
         })
@@ -180,7 +196,7 @@ class HomeActivity : BaseActivity() {
                 val ads = adRepository.getAds()
                 currentAds.clear()
                 currentAds.addAll(ads)
-                adAdapter.updateAds(currentAds)
+                adAdapter.updateAds(currentAds) // обновление RecyclerView
                 Log.d("HOME_ADS", "Ads loaded: ${ads.size}")
             } catch (e: Exception) {
                 Log.d("HOME_ADS", "Ошибка: ${e.message}")
@@ -193,6 +209,7 @@ class HomeActivity : BaseActivity() {
     private fun performSearch(query: String) {
         var result = currentAds.toMutableList()
 
+        // 🔹 Фильтрация по тексту поиска
         if (query.isNotEmpty()) {
             result = result.filter { ad ->
                 ad.title.contains(query, ignoreCase = true) ||
@@ -202,6 +219,7 @@ class HomeActivity : BaseActivity() {
             }.toMutableList()
         }
 
+        // 🔹 Фильтрация по активным фильтрам
         if (activeDorms.isNotEmpty())
             result = result.filter { ad -> activeDorms.contains(ad.dorm) }.toMutableList()
         if (activeCategories.isNotEmpty())
@@ -209,6 +227,7 @@ class HomeActivity : BaseActivity() {
         if (activeConditions.isNotEmpty())
             result = result.filter { ad -> activeConditions.contains(ad.condition) }.toMutableList()
 
+        // 🔹 Фильтрация по цене
         result = result.filter { ad ->
             val priceValue = ad.price.replace(Regex("[^\\d]"), "").toIntOrNull() ?: 0
             val minOk = minPriceFilter?.let { priceValue >= it } ?: true
@@ -220,6 +239,7 @@ class HomeActivity : BaseActivity() {
         updateFilterChipsVisibility()
     }
 
+    // ===== Удаление отдельного фильтра =====
     private fun removeFilterValue(filter: String) {
         activeDorms = activeDorms.filterNot { it == filter }
         activeCategories = activeCategories.filterNot { it == filter }
@@ -228,6 +248,7 @@ class HomeActivity : BaseActivity() {
         if (filter.startsWith("Цена от")) minPriceFilter = null
         if (filter.startsWith("Цена до")) maxPriceFilter = null
 
+        // 🔹 Обновление чипсов и повторная фильтрация
         val remaining = mutableListOf<String>()
         remaining.addAll(activeDorms)
         remaining.addAll(activeCategories)
@@ -239,6 +260,7 @@ class HomeActivity : BaseActivity() {
         updateFilterChipsVisibility()
     }
 
+    // ===== Открытие FiltersActivity =====
     private fun openFilters() {
         val intent = Intent(this, FiltersActivity::class.java).apply {
             putExtra("DORMS", activeDorms.toTypedArray())
@@ -247,7 +269,7 @@ class HomeActivity : BaseActivity() {
             putExtra("MIN_PRICE", minPriceFilter?.toString())
             putExtra("MAX_PRICE", maxPriceFilter?.toString())
         }
-        filtersLauncher.launch(intent)
+        filtersLauncher.launch(intent) // старт FiltersActivity
     }
 
     override fun onResume() {

@@ -9,17 +9,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.repository.SessionManager
-import com.example.fefumarket.ui.ad.MyPostsActivity
 import com.example.fefumarket.ui.auth.LoginActivity
-import com.example.fefumarket.ui.chat.ChatActivity
-import com.example.fefumarket.ui.favorites.FavoritesActivity
-import com.example.fefumarket.ui.home.HomeActivity
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class ProfileActivity : BaseActivity() {
 
@@ -39,7 +33,7 @@ class ProfileActivity : BaseActivity() {
 
         session = SessionManager(this)
 
-        // Инициализация полей
+        // 🔹 Инициализация полей
         profileImage = findViewById(R.id.profileImage)
         nameInput = findViewById(R.id.nameInput)
         passwordInput = findViewById(R.id.passwordInput)
@@ -48,16 +42,15 @@ class ProfileActivity : BaseActivity() {
         btnLogout = findViewById(R.id.logoutButton)
         btnDelete = findViewById(R.id.deleteButton)
 
-        // Загружаем сохранённые данные
+        // 🔹 Загрузка сохранённых данных пользователя
         nameInput.setText(session.getUserName())
         passwordInput.setText(session.getPassword())
-
         session.getImagePath()?.let {
             val bmp = BitmapFactory.decodeFile(it)
             if (bmp != null) profileImage.setImageBitmap(bmp)
         }
 
-        // Выбор изображения с использованием ActivityResultContracts
+        // 🔹 Выбор нового изображения профиля
         val pickImageLauncher = registerForActivityResult(
             ActivityResultContracts.GetContent()
         ) { uri ->
@@ -74,7 +67,7 @@ class ProfileActivity : BaseActivity() {
             pickImageLauncher.launch("image/*")
         }
 
-        // Сохранение данных
+        // 🔹 Сохранение имени и пароля пользователя
         btnSave.setOnClickListener {
             val name = nameInput.text.toString().trim()
             val password = passwordInput.text.toString()
@@ -94,61 +87,47 @@ class ProfileActivity : BaseActivity() {
                     showToast("Пароли не совпадают")
                     return@setOnClickListener
                 }
-                session.savePassword(password) // сохраняем новый пароль
+                session.savePassword(password) // 🔹 Сохранение нового пароля
             }
 
-            // Сохраняем имя независимо от пароля
-            session.saveUserName(name)
+            session.saveUserName(name) // 🔹 Сохранение имени пользователя
             showToast("Данные сохранены")
         }
 
-        // Сменить аккаунт
+        // 🔹 Смена аккаунта
         btnLogout.setOnClickListener {
-            // Создаём диалог подтверждения
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Сменить аккаунт")
             builder.setMessage("Вы точно хотите сменить аккаунт?")
-
-            // Кнопка Да
             builder.setPositiveButton("Да") { dialog, _ ->
-                session.clear()  // Сбрасываем текущий вход
+                session.clear() // 🔹 Очистка данных сессии
                 val intent = Intent(this, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                startActivity(intent) // 🔹 Переход на экран логина
                 showToast("Вы вышли из аккаунта")
                 dialog.dismiss()
             }
-
-            // Кнопка Отмена
             builder.setNegativeButton("Отмена") { dialog, _ ->
                 dialog.dismiss()
             }
-
             val dialog = builder.create()
             dialog.show()
         }
 
-        // Удалить аккаунт с подтверждением
+        // 🔹 Удаление аккаунта
         btnDelete.setOnClickListener { deleteAccount() }
     }
 
-    private fun logout() {
-        session.clear()
-        val intent = Intent(this, LoginActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        showToast("Вы вышли из аккаунта")
-    }
-
+    // 🔹 Метод удаления аккаунта с подтверждением
     private fun deleteAccount() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Удалить аккаунт")
         builder.setMessage("Вы точно хотите удалить аккаунт?")
         builder.setPositiveButton("Да") { dialog, _ ->
-            session.clearFull()
+            session.clearFull() // 🔹 Полная очистка сессии и данных пользователя
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            startActivity(intent) // 🔹 Переход на экран логина
             showToast("Аккаунт удалён")
             dialog.dismiss()
         }
@@ -165,6 +144,6 @@ class ProfileActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        setActiveNavItem(R.id.nav_profile)
+        setActiveNavItem(R.id.nav_profile) // 🔹 Подсветка активного элемента нижней навигации
     }
 }

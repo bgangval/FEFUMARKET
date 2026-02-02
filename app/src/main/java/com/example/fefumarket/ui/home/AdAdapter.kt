@@ -32,14 +32,14 @@ class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdVi
     override fun onBindViewHolder(holder: AdViewHolder, position: Int) {
         val ad = ads[position]
 
-        // Загружаем первое фото из списка imageUris
+        // 🔹 Загружаем первое фото объявления, если есть, иначе показываем заглушку
         if (ad.imageUris.isNotEmpty()) {
             Glide.with(holder.image.context)
                 .load(Uri.parse(ad.imageUris[0]))
                 .centerCrop()
                 .into(holder.image)
         } else {
-            holder.image.setImageResource(R.drawable.ic_camera) // если фото нет
+            holder.image.setImageResource(R.drawable.ic_camera)
         }
 
         holder.title.text = ad.title
@@ -47,6 +47,7 @@ class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdVi
         holder.seller.text = ad.seller
         holder.dorm.text = ad.dorm
 
+        // 🔹 Переход на страницу деталей объявления при клике на карточку
         holder.itemView.setOnClickListener {
             openAdDetail(it.context, ad)
         }
@@ -54,11 +55,13 @@ class AdAdapter(private var ads: List<Ad>) : RecyclerView.Adapter<AdAdapter.AdVi
 
     override fun getItemCount(): Int = ads.size
 
+    // 🔹 Обновление списка объявлений в RecyclerView
     fun updateAds(newAds: List<Ad>) {
         ads = newAds
         notifyDataSetChanged()
     }
 
+    // 🔹 Создание Intent и передача данных объявления в AdDetailActivity
     private fun openAdDetail(context: Context, ad: Ad) {
         val intent = Intent(context, AdDetailActivity::class.java).apply {
             putExtra("AD_ID", ad.id)

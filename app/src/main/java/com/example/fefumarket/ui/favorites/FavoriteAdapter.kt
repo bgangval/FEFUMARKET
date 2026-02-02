@@ -49,15 +49,17 @@ class FavoriteAdapter(
 
         holder.btnRemoveFavorite.setImageResource(R.drawable.ic_heart_red)
 
+        // 🔹 Логика удаления из избранного
         holder.btnRemoveFavorite.setOnClickListener {
-            FavoritesManager.remove(item)
-            removeItem(position)
+            FavoritesManager.remove(item) // удаляем из глобального списка избранного
+            removeItem(position)          // удаляем из текущего RecyclerView
         }
 
+        // 🔹 Логика перехода на страницу с деталями объявления
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, AdDetailActivity::class.java)
-            intent.putExtra("AD_ID", item.id)
+            intent.putExtra("AD_ID", item.id) // передаем ID объявления для загрузки деталей
             context.startActivity(intent)
         }
     }

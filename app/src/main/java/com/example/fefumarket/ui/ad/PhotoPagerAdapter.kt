@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 
+// Адаптер для ViewPager2, отображает фотографии объявления
+// Используется в AdDetailActivity и EditPostActivity
 class PhotoPagerAdapter(
     private val photos: List<Uri>
 ) : RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
@@ -24,6 +26,7 @@ class PhotoPagerAdapter(
     }
 
     override fun onBindViewHolder(holder: PhotoViewHolder, position: Int) {
+        // 🔹 Загружаем фотографию через Glide
         Glide.with(holder.image.context)
             .load(photos[position])
             .centerCrop()

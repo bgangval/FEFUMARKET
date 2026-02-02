@@ -23,6 +23,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
 
+// Экран редактирования объявления
+// Позволяет изменять данные объявления, добавлять фотографии,
+// отмечать как проданное, управлять сохранением через AdRepository
 class EditPostActivity : AppCompatActivity() {
 
     private lateinit var ad: Ad
@@ -42,6 +45,7 @@ class EditPostActivity : AppCompatActivity() {
 
     private val photoList = mutableListOf<Uri>()
 
+    // 🔹 Логика выбора нескольких фотографий
     private val pickImagesLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
@@ -68,12 +72,12 @@ class EditPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_post)
 
-        // 🔹 SessionManager и репозиторий
+        // 🔹 Инициализация SessionManager и репозитория
         sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
 
-        // UI
+        // ---------- Инициализация UI ----------
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
         etTitle = findViewById(R.id.etTitle)
@@ -90,7 +94,7 @@ class EditPostActivity : AppCompatActivity() {
         btnSave.setOnClickListener { saveChanges() }
         btnSold.setOnClickListener { markAsSold() }
 
-        // Загружаем объявление по title
+        // 🔹 Загружаем объявление по title через AdRepository
         val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
         CoroutineScope(Dispatchers.IO).launch {
             val foundAd = adRepository.findByTitle(adTitle)
@@ -106,6 +110,7 @@ class EditPostActivity : AppCompatActivity() {
         }
     }
 
+    // Инициализация полей с данными объявления
     private fun initFields() {
         // Фото
         if (ad.imageUris.isNotEmpty()) {
@@ -128,6 +133,7 @@ class EditPostActivity : AppCompatActivity() {
         spinnerCondition.setSelection(conditions.indexOf(ad.condition).coerceAtLeast(0))
     }
 
+    // 🔹 Сохранение изменений через AdRepository
     private fun saveChanges() {
         val newTitle = etTitle.text.toString().trim()
         val newPriceText = etPrice.text.toString().trim()
@@ -154,7 +160,7 @@ class EditPostActivity : AppCompatActivity() {
         )
 
         CoroutineScope(Dispatchers.IO).launch {
-            adRepository.updateAd(updatedAd)
+            adRepository.updateAd(updatedAd) // 🔹 обновление объявления через репозиторий
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@EditPostActivity, "Объявление обновлено", Toast.LENGTH_SHORT).show()
                 finish()
@@ -162,13 +168,14 @@ class EditPostActivity : AppCompatActivity() {
         }
     }
 
+    // 🔹 Отметка объявления как проданное
     private fun markAsSold() {
         val builder = androidx.appcompat.app.AlertDialog.Builder(this)
         builder.setTitle("Отметить как проданное")
         builder.setMessage("Вы точно хотите отметить это объявление как проданное?")
         builder.setPositiveButton("Да") { dialog, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                adRepository.removeAd(ad.id)
+                adRepository.removeAd(ad.id) // 🔹 удаление через репозиторий
                 FavoritesManager.remove(ad)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditPostActivity, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
@@ -181,6 +188,7 @@ class EditPostActivity : AppCompatActivity() {
         builder.create().show()
     }
 
+    // ---------- Адаптер для ViewPager ----------
     inner class PhotoPagerAdapter(private val photos: List<Uri>) : RecyclerView.Adapter<PhotoPagerAdapter.PhotoViewHolder>() {
         inner class PhotoViewHolder(itemView: ImageView) : RecyclerView.ViewHolder(itemView) {
             val imageView: ImageView = itemView
@@ -201,6 +209,7 @@ class EditPostActivity : AppCompatActivity() {
         override fun getItemCount(): Int = photos.size
     }
 
+    // ---------- Адаптер Spinner с белым текстом ----------
     private fun whiteTextAdapter(items: List<String>): ArrayAdapter<String> {
         return object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, items) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

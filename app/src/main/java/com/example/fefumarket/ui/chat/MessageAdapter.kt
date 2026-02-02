@@ -20,6 +20,7 @@ class MessageAdapter(private val messages: List<MessageItem>) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
+        // 🔹 Выбор layout в зависимости от того, чье сообщение — пользователя или собеседника
         val layout = if (viewType == 1)
             R.layout.item_message_user else R.layout.item_message_other
 
@@ -33,17 +34,20 @@ class MessageAdapter(private val messages: List<MessageItem>) :
         holder.container.removeAllViews()
 
         if (msg.isSticker && msg.stickerRes != null) {
+            // 🔹 Если сообщение — стикер, добавляем ImageView со стикером
             val iv = ImageView(holder.container.context).apply {
                 setImageResource(msg.stickerRes)
                 layoutParams = FrameLayout.LayoutParams(200, 200)
             }
             holder.container.addView(iv)
         } else {
+            // 🔹 Если обычное текстовое сообщение
             holder.messageText.visibility = View.VISIBLE
             holder.messageText.text = msg.text
             holder.container.addView(holder.messageText)
         }
 
+        // 🔹 Размещение сообщения слева или справа в зависимости от пользователя
         holder.container.foregroundGravity = if (msg.isUser) Gravity.END else Gravity.START
     }
 

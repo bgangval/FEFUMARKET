@@ -13,9 +13,11 @@ import androidx.core.net.toUri
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 
+// Адаптер для RecyclerView в MyPostsActivity
+// Отображает список объявлений пользователя с кнопкой редактирования и кликом для открытия деталей
 class MyPostsAdapter(
     private var ads: MutableList<Ad>,
-    private val onEditClick: (Ad) -> Unit
+    private val onEditClick: (Ad) -> Unit // 🔹 Логика передачи выбранного объявления для редактирования
 ) : RecyclerView.Adapter<MyPostsAdapter.MyPostViewHolder>() {
 
     inner class MyPostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -37,7 +39,7 @@ class MyPostsAdapter(
         holder.tvTitle.text = ad.title
         holder.tvPrice.text = ad.price
 
-        // Загружаем первое фото через Glide, если есть
+        // 🔹 Загружаем первое фото через Glide или показываем заглушку
         val firstPhotoUri = ad.imageUris.firstOrNull()?.toUri()
         if (firstPhotoUri != null) {
             Glide.with(holder.itemView.context)
@@ -45,10 +47,10 @@ class MyPostsAdapter(
                 .centerCrop()
                 .into(holder.adImage)
         } else {
-            holder.adImage.setImageResource(R.drawable.ic_camera) // заглушка
+            holder.adImage.setImageResource(R.drawable.ic_camera)
         }
 
-        // Клик по карточке — открыть детали объявления
+        // 🔹 Клик по карточке — открытие деталей объявления через AdDetailActivity
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, AdDetailActivity::class.java).apply {
@@ -57,7 +59,7 @@ class MyPostsAdapter(
             context.startActivity(intent)
         }
 
-        // Кнопка "Изменить"
+        // 🔹 Кнопка "Изменить" вызывает callback для редактирования
         holder.btnEdit.setOnClickListener {
             onEditClick(ad)
         }
@@ -65,6 +67,7 @@ class MyPostsAdapter(
 
     override fun getItemCount(): Int = ads.size
 
+    // 🔹 Обновление списка объявлений
     fun updateList(newAds: MutableList<Ad>) {
         ads.clear()
         ads.addAll(newAds)
