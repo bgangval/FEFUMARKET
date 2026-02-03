@@ -9,11 +9,11 @@ fun AdResponse.toAd(
 ): Ad {
     return Ad(
         id = id.toString(),
-        title = title,
-        price = price.toString(),
+        title = title ?: "",
+        price = price?.toString() ?: "0",
         dorm = dorm,
         seller = sellerName,
-        description = description,
+        description = description ?: "",
         category = "",
         condition = "",
         imageUris = emptyList(),
