@@ -10,14 +10,14 @@ import retrofit2.http.POST
 interface ApiService {
 
     // Регистрация
-    @POST("auth/register/")
+    @POST("auth/register")
     suspend fun register(@Body body: RegisterRequest): RegisterResponse
 
     // Логин
-    @POST("auth/login/")
+    @POST("auth/login")
     suspend fun login(@Body body: LoginRequest): LoginResponse
 
     // Список объявлений
-    @GET("products/")
+    @GET("/products/")
     suspend fun getAds(): ProductsResponse
 }
