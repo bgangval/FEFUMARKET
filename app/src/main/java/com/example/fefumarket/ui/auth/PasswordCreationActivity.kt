@@ -42,34 +42,32 @@ class PasswordCreationActivity : AppCompatActivity() {
         val registerButton = findViewById<Button>(R.id.register_button)
 
         registerButton.setOnClickListener {
+            val nameInput = findViewById<EditText>(R.id.name_input)
+            val name = nameInput.text.toString().trim()
             val password = passwordInput.text.toString().trim()
             val confirmPassword = confirmPasswordInput.text.toString().trim()
 
-            if (password.isEmpty() || confirmPassword.isEmpty()) {
+            if (name.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
             } else if (password != confirmPassword) {
                 Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show()
             } else {
-                // 🔹 Отправка данных регистрации на сервер через API
                 val api = RetrofitClient.create(this)
                 lifecycleScope.launch {
                     try {
-                        val response: RegisterResponse = api.register(
+                        val response = api.register(
                             RegisterRequest(
                                 email = emailFromIntent,
-                                password = password
+                                password = password,
+                                name = name
                             )
                         )
-
-                        // 🔹 Сохраняем токен и email локально для последующего входа
                         session.saveToken(response.access_token)
                         session.saveLogin(emailFromIntent)
 
-                        // 🔹 После успешной регистрации — переходим на главный экран
                         Toast.makeText(this@PasswordCreationActivity, "Регистрация успешна", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@PasswordCreationActivity, HomeActivity::class.java))
                         finish()
-
                     } catch (e: Exception) {
                         Toast.makeText(this@PasswordCreationActivity, "Ошибка регистрации", Toast.LENGTH_SHORT).show()
                         Log.e("REGISTER", "Registration error", e)
