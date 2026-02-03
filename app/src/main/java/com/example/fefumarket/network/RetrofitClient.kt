@@ -16,20 +16,20 @@ object RetrofitClient {
         val sessionManager = SessionManager(context)
 
         // Логирование HTTP-запросов
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
+        val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
         // OkHttp клиент с авторизацией и логированием
-        val okHttpClient = OkHttpClient.Builder()
+        val client = OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(sessionManager)) // Bearer token
-            .addInterceptor(loggingInterceptor)
+            .addInterceptor(logging)
             .build()
 
         // Retrofit
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

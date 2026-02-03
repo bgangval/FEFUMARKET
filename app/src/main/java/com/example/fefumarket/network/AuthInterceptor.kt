@@ -6,24 +6,16 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 // Interceptor, который добавляет Authorization header с Bearer-токеном
-class AuthInterceptor(
-    private val sessionManager: SessionManager
-) : Interceptor {
-
+class AuthInterceptor(private val sessionManager: SessionManager) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
         val token = sessionManager.getToken()
-
-        Log.d("AuthInterceptor", "Token from SessionManager: $token")
-
         val request = if (!token.isNullOrBlank()) {
-            originalRequest.newBuilder()
+            chain.request().newBuilder()
                 .addHeader("Authorization", "Bearer $token")
                 .build()
         } else {
-            originalRequest
+            chain.request()
         }
-
         return chain.proceed(request)
     }
 }
