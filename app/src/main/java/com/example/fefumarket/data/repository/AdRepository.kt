@@ -16,7 +16,8 @@ class AdRepository(
 
     // Получение всех объявлений с сервера, маппинг в внутреннюю модель и кэширование
     suspend fun getAds(): List<Ad> {
-        val adsFromServer: List<AdResponse> = api.getAds()
+        val response = api.getAds()
+        val adsFromServer = response.items
         val mappedAds = adsFromServer.map { it.toAd(sellerName = "Продавец") }
         adsCache.clear()
         adsCache.addAll(mappedAds)
