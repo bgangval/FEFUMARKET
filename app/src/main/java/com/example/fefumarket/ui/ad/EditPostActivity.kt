@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.CategoryRepository
 import com.example.fefumarket.data.repository.FavoritesManager
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.network.RetrofitClient
@@ -22,6 +23,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 // Экран редактирования объявления
 // Позволяет изменять данные объявления, добавлять фотографии,
@@ -63,19 +67,21 @@ class EditPostActivity : AppCompatActivity() {
         "Корпус 6.1", "Корпус 6.2", "Корпус 7.1", "Корпус 7.2", "Корпус 8.1", "Корпус 8.2",
         "Корпус 9", "Корпус 10", "Корпус 11"
     )
-    private val categories = listOf(
-        "Одежда", "Обувь", "Техника", "Бьюти", "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
-    )
+    private val categories = mutableListOf<String>()
     private val conditions = listOf("Новое", "Б/у")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_post)
 
-        // 🔹 Инициализация SessionManager и репозитория
+        // 🔹 Инициализация SessionManager и репозиториев
         sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
+        val categoryRepository = CategoryRepository(api, sessionManager)
+        
+        // Загружаем категории с сервера
+        loadCategories(categoryRepository)
 
         // ---------- Инициализация UI ----------
         photoPager = findViewById(R.id.photoPager)
@@ -160,10 +166,27 @@ class EditPostActivity : AppCompatActivity() {
         )
 
         CoroutineScope(Dispatchers.IO).launch {
-            adRepository.updateAd(updatedAd) // 🔹 обновление объявления через репозиторий
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@EditPostActivity, "Объявление обновлено", Toast.LENGTH_SHORT).show()
-                finish()
+            try {
+                val updated = adRepository.updateAd(updatedAd) // 🔹 обновление объявления через репозиторий
+                
+                // Загружаем новые изображения, если они есть
+                val productId = updated.id.toIntOrNull()
+                if (productId != null && photoList.isNotEmpty()) {
+                    uploadImages(productId)
+                }
+                
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EditPostActivity, "Объявление обновлено", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@EditPostActivity,
+                        "Ошибка при обновлении: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
@@ -175,12 +198,23 @@ class EditPostActivity : AppCompatActivity() {
         builder.setMessage("Вы точно хотите отметить это объявление как проданное?")
         builder.setPositiveButton("Да") { dialog, _ ->
             CoroutineScope(Dispatchers.IO).launch {
-                adRepository.removeAd(ad.id) // 🔹 удаление через репозиторий
-                FavoritesManager.remove(ad)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EditPostActivity, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                    finish()
+                try {
+                    adRepository.removeAd(ad.id) // 🔹 удаление через репозиторий
+                    FavoritesManager.remove(ad)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@EditPostActivity, "Объявление отмечено как проданное", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@EditPostActivity,
+                            "Ошибка при удалении: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        dialog.dismiss()
+                    }
                 }
             }
         }
@@ -224,6 +258,56 @@ class EditPostActivity : AppCompatActivity() {
                 view.setBackgroundColor(resources.getColor(R.color.bg, null))
                 return view
             }
-        }.apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+            }.apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+    }
+
+    // 🔹 Загрузка категорий с сервера
+    private fun loadCategories(categoryRepository: CategoryRepository) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val serverCategories = categoryRepository.getCategories()
+                categories.clear()
+                categories.addAll(serverCategories.map { it.name })
+                
+                withContext(Dispatchers.Main) {
+                    spinnerCategory.adapter = whiteTextAdapter(categories)
+                    // Восстанавливаем выбранную категорию после загрузки
+                    if (::ad.isInitialized) {
+                        spinnerCategory.setSelection(categories.indexOf(ad.category).coerceAtLeast(0))
+                    }
+                }
+            } catch (e: Exception) {
+                // Fallback на локальные категории
+                withContext(Dispatchers.Main) {
+                    categories.clear()
+                    categories.addAll(listOf(
+                        "Одежда", "Обувь", "Техника", "Бьюти", "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
+                    ))
+                    spinnerCategory.adapter = whiteTextAdapter(categories)
+                    if (::ad.isInitialized) {
+                        spinnerCategory.setSelection(categories.indexOf(ad.category).coerceAtLeast(0))
+                    }
+                }
+            }
+        }
+    }
+
+    // 🔹 Загрузка изображений на сервер
+    private suspend fun uploadImages(productId: Int) {
+        try {
+            photoList.forEach { uri ->
+                // Для content:// URI используем InputStream
+                val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
+                val bytes = inputStream.readBytes()
+                inputStream.close()
+                
+                val requestFile = okhttp3.RequestBody.create("image/*".toMediaTypeOrNull(), bytes)
+                val imagePart = MultipartBody.Part.createFormData("image", "image_${System.currentTimeMillis()}.jpg", requestFile)
+                adRepository.uploadProductImage(productId, imagePart)
+            }
+        } catch (e: Exception) {
+            // Логируем ошибку, но не прерываем процесс
+            android.util.Log.e("EditPostActivity", "Ошибка загрузки изображений: ${e.message}")
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.example.fefumarket.ui.profile
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.ImageView
@@ -9,15 +10,21 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
+import com.example.fefumarket.data.models.api.UserUpdate
 import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.data.repository.UserRepository
+import com.example.fefumarket.network.RetrofitClient
 import com.example.fefumarket.ui.auth.LoginActivity
+import kotlinx.coroutines.launch
 
 class ProfileActivity : BaseActivity() {
 
     private lateinit var session: SessionManager
+    private lateinit var userRepository: UserRepository
 
     private lateinit var profileImage: ImageView
     private lateinit var nameInput: EditText
@@ -27,11 +34,15 @@ class ProfileActivity : BaseActivity() {
     private lateinit var btnLogout: TextView
     private lateinit var btnDelete: TextView
 
+    private var selectedImageUri: Uri? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
         session = SessionManager(this)
+        val api = RetrofitClient.create(this)
+        userRepository = UserRepository(api, session)
 
         // 🔹 Инициализация полей
         profileImage = findViewById(R.id.profileImage)
@@ -42,22 +53,17 @@ class ProfileActivity : BaseActivity() {
         btnLogout = findViewById(R.id.logoutButton)
         btnDelete = findViewById(R.id.deleteButton)
 
-        // 🔹 Загрузка сохранённых данных пользователя
-        nameInput.setText(session.getUserName())
-        passwordInput.setText(session.getPassword())
-        session.getImagePath()?.let {
-            val bmp = BitmapFactory.decodeFile(it)
-            if (bmp != null) profileImage.setImageBitmap(bmp)
-        }
+        // 🔹 Загрузка данных пользователя с сервера
+        loadUserProfile()
 
         // 🔹 Выбор нового изображения профиля
         val pickImageLauncher = registerForActivityResult(
             ActivityResultContracts.GetContent()
         ) { uri ->
             uri?.let {
-                session.saveImagePath(uri.toString())
+                selectedImageUri = it
                 Glide.with(this)
-                    .load(uri)
+                    .load(it)
                     .circleCrop()
                     .into(profileImage)
             }
@@ -67,7 +73,7 @@ class ProfileActivity : BaseActivity() {
             pickImageLauncher.launch("image/*")
         }
 
-        // 🔹 Сохранение имени и пароля пользователя
+        // 🔹 Сохранение имени и пароля пользователя через API
         btnSave.setOnClickListener {
             val name = nameInput.text.toString().trim()
             val password = passwordInput.text.toString()
@@ -87,25 +93,51 @@ class ProfileActivity : BaseActivity() {
                     showToast("Пароли не совпадают")
                     return@setOnClickListener
                 }
-                session.savePassword(password) // 🔹 Сохранение нового пароля
+                // Пароль обновляется через отдельный эндпоинт (если есть) или остается локально
+                session.savePassword(password)
             }
 
-            session.saveUserName(name) // 🔹 Сохранение имени пользователя
-            showToast("Данные сохранены")
+            lifecycleScope.launch {
+                try {
+                    // Обновляем имя через API
+                    val userUpdate = UserUpdate(name = name)
+                    val updatedUser = userRepository.updateMe(userUpdate)
+                    
+                    // Сохраняем локально для совместимости
+                    session.saveUserName(updatedUser.name)
+                    updatedUser.avatar_url?.let { session.saveImagePath(it) }
+                    
+                    showToast("Данные сохранены")
+                } catch (e: Exception) {
+                    showToast("Ошибка при сохранении: ${e.message}")
+                }
+            }
         }
 
-        // 🔹 Смена аккаунта
+        // 🔹 Смена аккаунта через API
         btnLogout.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Сменить аккаунт")
             builder.setMessage("Вы точно хотите сменить аккаунт?")
             builder.setPositiveButton("Да") { dialog, _ ->
-                session.clear() // 🔹 Очистка данных сессии
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent) // 🔹 Переход на экран логина
-                showToast("Вы вышли из аккаунта")
-                dialog.dismiss()
+                lifecycleScope.launch {
+                    try {
+                        userRepository.logout()
+                        val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        showToast("Вы вышли из аккаунта")
+                    } catch (e: Exception) {
+                        // Даже если API вызов не удался, очищаем локально
+                        session.clear()
+                        session.clearToken()
+                        val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        showToast("Вы вышли из аккаунта")
+                    }
+                    dialog.dismiss()
+                }
             }
             builder.setNegativeButton("Отмена") { dialog, _ ->
                 dialog.dismiss()
@@ -114,22 +146,65 @@ class ProfileActivity : BaseActivity() {
             dialog.show()
         }
 
-        // 🔹 Удаление аккаунта
+        // 🔹 Удаление аккаунта через API
         btnDelete.setOnClickListener { deleteAccount() }
     }
 
-    // 🔹 Метод удаления аккаунта с подтверждением
+    // 🔹 Загрузка профиля пользователя с сервера
+    private fun loadUserProfile() {
+        lifecycleScope.launch {
+            try {
+                val user = userRepository.getMe()
+                nameInput.setText(user.name)
+                
+                // Загружаем аватар с сервера, если есть
+                user.avatar_url?.let { avatarUrl ->
+                    Glide.with(this@ProfileActivity)
+                        .load(avatarUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.ic_user)
+                        .into(profileImage)
+                    session.saveImagePath(avatarUrl)
+                } ?: run {
+                    // Если аватара нет на сервере, пробуем загрузить локальный
+                    session.getImagePath()?.let {
+                        val bmp = BitmapFactory.decodeFile(it)
+                        if (bmp != null) profileImage.setImageBitmap(bmp)
+                    }
+                }
+                
+                // Сохраняем имя локально для совместимости
+                session.saveUserName(user.name)
+            } catch (e: Exception) {
+                // Если ошибка, используем локальные данные
+                nameInput.setText(session.getUserName())
+                session.getImagePath()?.let {
+                    val bmp = BitmapFactory.decodeFile(it)
+                    if (bmp != null) profileImage.setImageBitmap(bmp)
+                }
+            }
+        }
+    }
+
+    // 🔹 Метод удаления аккаунта с подтверждением через API
     private fun deleteAccount() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Удалить аккаунт")
-        builder.setMessage("Вы точно хотите удалить аккаунт?")
+        builder.setMessage("Вы точно хотите удалить аккаунт? Это действие нельзя отменить.")
         builder.setPositiveButton("Да") { dialog, _ ->
-            session.clearFull() // 🔹 Полная очистка сессии и данных пользователя
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent) // 🔹 Переход на экран логина
-            showToast("Аккаунт удалён")
-            dialog.dismiss()
+            lifecycleScope.launch {
+                try {
+                    userRepository.deleteMe()
+                    session.clearFull()
+                    val intent = Intent(this@ProfileActivity, LoginActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    showToast("Аккаунт удалён")
+                } catch (e: Exception) {
+                    showToast("Ошибка при удалении: ${e.message}")
+                }
+                dialog.dismiss()
+            }
         }
         builder.setNegativeButton("Отмена") { dialog, _ ->
             dialog.dismiss()

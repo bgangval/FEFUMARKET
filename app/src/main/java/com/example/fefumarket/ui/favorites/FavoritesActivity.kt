@@ -38,28 +38,26 @@ class FavoritesActivity : BaseActivity() {
         recyclerView.adapter = adapter
     }
 
-    // 🔹 Обновление списка избранного с проверкой существования объявлений на сервере
+    // 🔹 Обновление списка избранного с сервера
     private fun updateFavoritesList() {
         CoroutineScope(Dispatchers.IO).launch {
-            val allAds = adRepository.getAds() // получаем все объявления с репозитория
-            val favoriteAds = FavoritesManager.getAll() // получаем список избранного локально
+            try {
+                val favoriteAds = adRepository.getFavorites() // получаем избранное с сервера
 
-            val updatedList = favoriteAds.mapNotNull { favAd ->
-                allAds.find { it.id == favAd.id } // оставляем только реально существующие объявления
-            }.toMutableList()
-
-            // 🔹 Удаляем из FavoritesManager те объявления, которых больше нет на сервере
-            favoriteAds.forEach { favAd ->
-                if (updatedList.none { it.id == favAd.id }) {
-                    FavoritesManager.remove(favAd)
+                // 🔹 Обновляем UI в главном потоке
+                withContext(Dispatchers.Main) {
+                    adapter.items.clear()
+                    adapter.items.addAll(favoriteAds)
+                    adapter.notifyDataSetChanged()
                 }
-            }
-
-            // 🔹 Обновляем UI в главном потоке
-            withContext(Dispatchers.Main) {
-                adapter.items.clear()
-                adapter.items.addAll(updatedList)
-                adapter.notifyDataSetChanged()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    // Если ошибка, показываем пустой список или используем локальный кэш как fallback
+                    val localFavorites = FavoritesManager.getAll()
+                    adapter.items.clear()
+                    adapter.items.addAll(localFavorites)
+                    adapter.notifyDataSetChanged()
+                }
             }
         }
     }

@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.ChatRepository
 import com.example.fefumarket.data.repository.FavoritesManager
 import com.example.fefumarket.data.repository.MessagesManager
 import com.example.fefumarket.data.repository.SessionManager
@@ -41,6 +42,7 @@ class AdDetailActivity : AppCompatActivity() {
     private lateinit var btnFavoriteTop: ImageButton
 
     private lateinit var adRepository: AdRepository
+    private lateinit var chatRepository: ChatRepository
     private lateinit var sessionManager: SessionManager // 🔹 SessionManager для AdRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,9 +64,11 @@ class AdDetailActivity : AppCompatActivity() {
         val btnChat: Button = findViewById(R.id.contactButton)
         val btnShareTop: ImageButton = findViewById(R.id.btnChatTop)
 
-        // ---------- Создание SessionManager и репозитория ----------
+        // ---------- Создание SessionManager и репозиториев ----------
         sessionManager = SessionManager(this)
-        adRepository = AdRepository(RetrofitClient.create(this), sessionManager)
+        val api = RetrofitClient.create(this)
+        adRepository = AdRepository(api, sessionManager)
+        chatRepository = ChatRepository(api, sessionManager)
 
         // ---------- Получение ID объявления ----------
         val adIdFromIntent = intent.getStringExtra("AD_ID")
@@ -78,6 +82,7 @@ class AdDetailActivity : AppCompatActivity() {
         }
 
         // ---------- Загрузка объявления с использованием репозитория ----------
+        var isFavorite = false
         lifecycleScope.launch {
             val foundAd = adRepository.getAdById(resolvedId)
             if (foundAd == null) {
@@ -86,24 +91,72 @@ class AdDetailActivity : AppCompatActivity() {
                 return@launch
             }
             ad = foundAd
+            
+            // Проверяем, является ли объявление избранным
+            try {
+                val favorites = adRepository.getFavorites()
+                isFavorite = favorites.any { it.id == ad.id }
+            } catch (e: Exception) {
+                // Если ошибка, используем локальный кэш как fallback
+                isFavorite = FavoritesManager.isFavorite(ad)
+            }
+            
             updateUI()
+            updateFavoriteIcon(btnFavoriteTop, isFavorite)
         }
 
         // ---------- Настройка кнопок ----------
         // btnBack — возвращение на предыдущий экран
         btnBack.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-        // btnFavoriteTop / btnFavorite — добавление/удаление объявления из избранного через FavoritesManager
-        var isFavorite = false
+        // btnFavoriteTop / btnFavorite — добавление/удаление объявления из избранного через API
         btnFavoriteTop.setOnClickListener {
-            isFavorite = !isFavorite
-            if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
-            updateFavoriteIcon(btnFavoriteTop, isFavorite)
+            lifecycleScope.launch {
+                try {
+                    val productId = ad.id.toIntOrNull() 
+                        ?: throw Exception("Invalid product ID")
+                    
+                    isFavorite = !isFavorite
+                    if (isFavorite) {
+                        adRepository.addFavorite(productId)
+                        FavoritesManager.add(ad) // Также обновляем локальный кэш
+                    } else {
+                        adRepository.removeFavorite(productId)
+                        FavoritesManager.remove(ad) // Также обновляем локальный кэш
+                    }
+                    updateFavoriteIcon(btnFavoriteTop, isFavorite)
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@AdDetailActivity,
+                        "Ошибка: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
         btnFavorite.setOnClickListener {
-            isFavorite = !isFavorite
-            if (isFavorite) FavoritesManager.add(ad) else FavoritesManager.remove(ad)
-            updateFavoriteIcon(btnFavoriteTop, isFavorite)
+            lifecycleScope.launch {
+                try {
+                    val productId = ad.id.toIntOrNull() 
+                        ?: throw Exception("Invalid product ID")
+                    
+                    isFavorite = !isFavorite
+                    if (isFavorite) {
+                        adRepository.addFavorite(productId)
+                        FavoritesManager.add(ad) // Также обновляем локальный кэш
+                    } else {
+                        adRepository.removeFavorite(productId)
+                        FavoritesManager.remove(ad) // Также обновляем локальный кэш
+                    }
+                    updateFavoriteIcon(btnFavoriteTop, isFavorite)
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@AdDetailActivity,
+                        "Ошибка: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
 
         // btnChat — открытие чата через MessagesManager
@@ -153,19 +206,49 @@ class AdDetailActivity : AppCompatActivity() {
         )
     }
 
-    // 🔹 Логика чата между слоями: MessagesManager ↔ MessageActivity
+    // 🔹 Логика чата между слоями: создание через API и переход в MessageActivity
     private fun openChat() {
-        val chatId = "${ad.seller}_${ad.id}"
-        val avatar = ad.imageUris.firstOrNull() ?: ""
-        MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, avatar)
+        lifecycleScope.launch {
+            try {
+                val productId = ad.id.toIntOrNull() 
+                    ?: throw Exception("Invalid product ID")
+                
+                // Создаем или получаем чат через API
+                val chatOut = chatRepository.getOrCreateChat(productId)
+                
+                // Сохраняем локально для совместимости
+                val chatId = chatOut.id.toString()
+                val avatar = ad.imageUris.firstOrNull() ?: ""
+                MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, avatar)
 
-        val intent = Intent(this, MessageActivity::class.java).apply {
-            putExtra("CHAT_ID", chatId)
-            putExtra("SELLER_NAME", ad.seller)
-            putExtra("PRODUCT_NAME", ad.title)
-            putExtra("AVATAR_URI", avatar)
+                val intent = Intent(this@AdDetailActivity, MessageActivity::class.java).apply {
+                    putExtra("CHAT_ID", chatId)
+                    putExtra("API_CHAT_ID", chatOut.id)
+                    putExtra("SELLER_NAME", ad.seller)
+                    putExtra("PRODUCT_NAME", ad.title)
+                    putExtra("AVATAR_URI", avatar)
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@AdDetailActivity,
+                    "Ошибка создания чата: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                // Fallback на локальный чат
+                val chatId = "${ad.seller}_${ad.id}"
+                val avatar = ad.imageUris.firstOrNull() ?: ""
+                MessagesManager.getOrCreateChat(chatId, ad.seller, ad.title, avatar)
+                
+                val intent = Intent(this@AdDetailActivity, MessageActivity::class.java).apply {
+                    putExtra("CHAT_ID", chatId)
+                    putExtra("SELLER_NAME", ad.seller)
+                    putExtra("PRODUCT_NAME", ad.title)
+                    putExtra("AVATAR_URI", avatar)
+                }
+                startActivity(intent)
+            }
         }
-        startActivity(intent)
     }
 
     // 🔹 Поделиться объявлением через deep link

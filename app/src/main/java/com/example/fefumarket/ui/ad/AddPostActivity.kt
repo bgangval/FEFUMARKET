@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
@@ -13,12 +14,17 @@ import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
 import com.example.fefumarket.data.repository.AdRepository
+import com.example.fefumarket.data.repository.CategoryRepository
 import com.example.fefumarket.data.repository.SessionManager
 import com.example.fefumarket.network.RetrofitClient
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import java.util.UUID
 
 // Экран добавления нового объявления.
@@ -45,16 +51,13 @@ class AddPostActivity : AppCompatActivity() {
         "Корпус 8.2", "Корпус 9", "Корпус 10", "Корпус 11"
     )
 
-    private val categories = listOf(
-        "Одежда", "Обувь", "Техника", "Бьюти",
-        "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
-    )
-
+    private val categories = mutableListOf<String>()
     private val conditions = listOf("Новое", "Б/у")
 
     private val photoList = mutableListOf<Uri>()
 
     private lateinit var adRepository: AdRepository
+    private lateinit var categoryRepository: CategoryRepository
     private lateinit var sessionManager: SessionManager
 
     // Получение изображений из системной галереи (взаимодействие с внешним Activity)
@@ -72,11 +75,15 @@ class AddPostActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_post)
 
-        // Инициализация SessionManager и AdRepository
+        // Инициализация SessionManager и репозиториев
         // Связь UI-слоя с сетевым и слоем данных
         sessionManager = SessionManager(this)
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
+        categoryRepository = CategoryRepository(api, sessionManager)
+        
+        // Загружаем категории с сервера
+        loadCategories()
 
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
@@ -103,6 +110,31 @@ class AddPostActivity : AppCompatActivity() {
         spinnerCondition.adapter = whiteTextAdapter(conditions)
 
         btnSave.setOnClickListener { saveAd() }
+    }
+
+    // 🔹 Загрузка категорий с сервера
+    private fun loadCategories() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val serverCategories = categoryRepository.getCategories()
+                categories.clear()
+                categories.addAll(serverCategories.map { it.name })
+                
+                withContext(Dispatchers.Main) {
+                    spinnerCategory.adapter = whiteTextAdapter(categories)
+                }
+            } catch (e: Exception) {
+                // Fallback на локальные категории
+                withContext(Dispatchers.Main) {
+                    categories.clear()
+                    categories.addAll(listOf(
+                        "Одежда", "Обувь", "Техника", "Бьюти",
+                        "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
+                    ))
+                    spinnerCategory.adapter = whiteTextAdapter(categories)
+                }
+            }
+        }
     }
 
     // Формирование модели объявления и передача её в репозиторий
@@ -140,15 +172,51 @@ class AddPostActivity : AppCompatActivity() {
 
         // Передача данных в репозиторий (слой данных)
         CoroutineScope(Dispatchers.IO).launch {
-            adRepository.addAd(newAd)
-            runOnUiThread {
-                Toast.makeText(
-                    this@AddPostActivity,
-                    "Объявление опубликовано",
-                    Toast.LENGTH_SHORT
-                ).show()
-                finish()
+            try {
+                val createdAd = adRepository.addAd(newAd)
+                
+                // Загружаем изображения после создания объявления
+                val productId = createdAd.id.toIntOrNull()
+                if (productId != null && photoList.isNotEmpty()) {
+                    uploadImages(productId)
+                }
+                
+                runOnUiThread {
+                    Toast.makeText(
+                        this@AddPostActivity,
+                        "Объявление опубликовано",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(
+                        this@AddPostActivity,
+                        "Ошибка при публикации: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
+        }
+    }
+
+    // 🔹 Загрузка изображений на сервер
+    private suspend fun uploadImages(productId: Int) {
+        try {
+            photoList.forEach { uri ->
+                // Для content:// URI используем InputStream
+                val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
+                val bytes = inputStream.readBytes()
+                inputStream.close()
+                
+                val requestFile = okhttp3.RequestBody.create("image/*".toMediaTypeOrNull(), bytes)
+                val imagePart = MultipartBody.Part.createFormData("image", "image_${System.currentTimeMillis()}.jpg", requestFile)
+                adRepository.uploadProductImage(productId, imagePart)
+            }
+        } catch (e: Exception) {
+            // Логируем ошибку, но не прерываем процесс
+            android.util.Log.e("AddPostActivity", "Ошибка загрузки изображений: ${e.message}")
         }
     }
 

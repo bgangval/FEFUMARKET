@@ -1,18 +1,25 @@
 package com.example.fefumarket.ui.chat
 
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.ChatItem
 import com.example.fefumarket.data.models.MessageItem
+import com.example.fefumarket.data.models.api.toMessageItem
+import com.example.fefumarket.data.repository.ChatRepository
 import com.example.fefumarket.data.repository.MessagesManager
-import android.view.View
+import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 class MessageActivity : AppCompatActivity() {
 
@@ -22,7 +29,10 @@ class MessageActivity : AppCompatActivity() {
     private lateinit var adapter: MessageAdapter
 
     private lateinit var chatId: String
+    private var apiChatId: Int? = null
     private lateinit var chat: ChatItem
+    private lateinit var chatRepository: ChatRepository
+    private lateinit var sessionManager: SessionManager
     private val messages = mutableListOf<MessageItem>()
 
     private fun hideKeyboard(editText: EditText) {
@@ -39,9 +49,20 @@ class MessageActivity : AppCompatActivity() {
         val productName = intent.getStringExtra("PRODUCT_NAME") ?: "Товар"
         val avatarUri = intent.getStringExtra("AVATAR_URI") ?: ""
         chatId = intent.getStringExtra("CHAT_ID") ?: "${sellerName}_$productName"
+        apiChatId = intent.getIntExtra("API_CHAT_ID", -1).takeIf { it != -1 }
 
-        // 🔹 Получаем или создаём чат через MessagesManager
+        // 🔹 Инициализация репозитория
+        sessionManager = SessionManager(this)
+        val api = RetrofitClient.create(this)
+        chatRepository = ChatRepository(api, sessionManager)
+
+        // 🔹 Получаем или создаём чат через MessagesManager (локальный кэш)
         chat = MessagesManager.getOrCreateChat(chatId, sellerName, productName, avatarUri)
+
+        // 🔹 Загружаем сообщения с сервера, если есть API chat ID
+        if (apiChatId != null) {
+            loadMessages(apiChatId!!)
+        }
 
         // Заголовок чата
         findViewById<TextView>(R.id.chatTitle).text = sellerName
@@ -59,22 +80,42 @@ class MessageActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
-        // 🔹 Загружаем последнее сообщение, если оно есть
-        chat.lastMessage.takeIf { it.isNotEmpty() }?.let {
-            messages.add(MessageItem(it, isUser = false))
-        }
-
-        // 🔹 Отправка нового сообщения → обновление MessagesManager
+        // 🔹 Отправка нового сообщения через API
         sendButton.setOnClickListener {
             val text = inputMessage.text.toString().trim()
             if (text.isNotEmpty()) {
-                messages.add(MessageItem(text, isUser = true))
-                adapter.notifyItemInserted(messages.size - 1)
-                recyclerView.scrollToPosition(messages.size - 1)
-                inputMessage.text.clear()
-
-                // 🔹 Обновляем данные чата в MessagesManager
-                MessagesManager.addMessage(chatId, text)
+                if (apiChatId != null) {
+                    // Отправляем через API
+                    lifecycleScope.launch {
+                        try {
+                            val messageOut = chatRepository.sendMessage(apiChatId!!, text)
+                            val currentUserId = sessionManager.getLogin()?.let { 
+                                // Здесь нужно получить ID текущего пользователя
+                                // Пока используем простую проверку
+                                0 // Заглушка
+                            } ?: 0
+                            val messageItem = messageOut.toMessageItem(currentUserId)
+                            messages.add(messageItem)
+                            adapter.notifyItemInserted(messages.size - 1)
+                            recyclerView.scrollToPosition(messages.size - 1)
+                            inputMessage.text.clear()
+                            MessagesManager.addMessage(chatId, text)
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                this@MessageActivity,
+                                "Ошибка отправки: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    // Fallback на локальное сохранение
+                    messages.add(MessageItem(text, isUser = true))
+                    adapter.notifyItemInserted(messages.size - 1)
+                    recyclerView.scrollToPosition(messages.size - 1)
+                    inputMessage.text.clear()
+                    MessagesManager.addMessage(chatId, text)
+                }
             }
         }
 
@@ -106,6 +147,36 @@ class MessageActivity : AppCompatActivity() {
                 stickerRecycler.visibility = View.VISIBLE
             } else {
                 stickerRecycler.visibility = View.GONE
+            }
+        }
+    }
+
+    // 🔹 Загрузка сообщений с сервера
+    private fun loadMessages(chatId: Int) {
+        lifecycleScope.launch {
+            try {
+                val chatOut = chatRepository.getChat(chatId)
+                val currentUserId = sessionManager.getLogin()?.let { 
+                    // Здесь нужно получить ID текущего пользователя
+                    // Пока используем простую проверку
+                    0 // Заглушка
+                } ?: 0
+                
+                messages.clear()
+                chatOut.messages.forEach { messageOut ->
+                    messages.add(messageOut.toMessageItem(currentUserId))
+                }
+                adapter.notifyDataSetChanged()
+                
+                if (messages.isNotEmpty()) {
+                    recyclerView.scrollToPosition(messages.size - 1)
+                }
+            } catch (e: Exception) {
+                // Если ошибка, используем локальные данные
+                chat.lastMessage.takeIf { it.isNotEmpty() }?.let {
+                    messages.add(MessageItem(it, isUser = false))
+                    adapter.notifyDataSetChanged()
+                }
             }
         }
     }

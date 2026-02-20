@@ -5,19 +5,27 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
 import com.example.fefumarket.base.BaseActivity
 import com.example.fefumarket.data.models.ChatItem
-import com.example.fefumarket.data.repository.MessagesManager
+import com.example.fefumarket.data.models.api.toChatItem
+import com.example.fefumarket.data.repository.ChatRepository
+import com.example.fefumarket.data.repository.SessionManager
+import com.example.fefumarket.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 class ChatActivity : BaseActivity() {
 
     private lateinit var chats: MutableList<ChatItem>
     private lateinit var adapter: ChatAdapter
+    private lateinit var chatRepository: ChatRepository
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,28 +34,52 @@ class ChatActivity : BaseActivity() {
         // 🔹 Указываем активный пункт нижней навигации
         setActiveNavItem(R.id.nav_chat)
 
+        sessionManager = SessionManager(this)
+        val api = RetrofitClient.create(this)
+        chatRepository = ChatRepository(api, sessionManager)
+
         val recyclerView: RecyclerView = findViewById(R.id.chatRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // 🔹 Загружаем все чаты через MessagesManager
-        chats = MessagesManager.getAllChats().toMutableList()
+        chats = mutableListOf()
         adapter = ChatAdapter(chats)
         recyclerView.adapter = adapter
 
-        // 🔹 Если пришли из объявления, прокручиваем к нужному чату
-        val chatId = intent.getStringExtra("CHAT_ID")
-        chatId?.let { id ->
-            val chat = MessagesManager.getAllChats().find { "${it.sellerName}_${it.productName}" == id }
-            chat?.let { c ->
-                if (!chats.contains(c)) {
-                    chats.add(c)
-                    adapter.notifyItemInserted(chats.size - 1)
-                }
-                recyclerView.scrollToPosition(chats.indexOf(c))
-            }
-        }
+        // 🔹 Загружаем чаты с сервера
+        loadChats()
 
         setupSwipe(recyclerView)
+    }
+
+    // 🔹 Загрузка чатов с сервера
+    private fun loadChats() {
+        lifecycleScope.launch {
+            try {
+                val chatOuts = chatRepository.getMyChats()
+                chats.clear()
+                // Преобразуем ChatOut в ChatItem
+                chatOuts.forEach { chatOut ->
+                    // Здесь нужно получить информацию о продукте и продавце
+                    // Пока используем базовый маппинг
+                    val chatItem = chatOut.toChatItem(
+                        sellerName = "Продавец ${chatOut.seller_id}",
+                        productName = "Товар ${chatOut.product_id}"
+                    )
+                    chats.add(chatItem)
+                }
+                adapter.notifyDataSetChanged()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@ChatActivity,
+                    "Ошибка загрузки чатов: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                // Fallback на локальный кэш
+                chats.clear()
+                chats.addAll(com.example.fefumarket.data.repository.MessagesManager.getAllChats())
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun setupSwipe(recyclerView: RecyclerView) {
@@ -112,5 +144,7 @@ class ChatActivity : BaseActivity() {
         super.onResume()
         // 🔹 Подсветка активного пункта навигации при возврате на экран
         setActiveNavItem(R.id.nav_chat)
+        // 🔹 Обновляем список чатов при возврате на экран
+        loadChats()
     }
 }
