@@ -100,10 +100,15 @@ class EditPostActivity : AppCompatActivity() {
         btnSave.setOnClickListener { saveChanges() }
         btnSold.setOnClickListener { markAsSold() }
 
-        // 🔹 Загружаем объявление по title через AdRepository
+        // 🔹 Загружаем объявление по ID (основной путь), fallback — по title
+        val adId = intent.getStringExtra("AD_ID")
         val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
         CoroutineScope(Dispatchers.IO).launch {
-            val foundAd = adRepository.findByTitle(adTitle)
+            val foundAd = when {
+                !adId.isNullOrBlank() -> adRepository.getAdById(adId)
+                adTitle.isNotBlank() -> adRepository.findByTitle(adTitle)
+                else -> null
+            }
             if (foundAd == null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditPostActivity, "Объявление не найдено", Toast.LENGTH_SHORT).show()
@@ -296,6 +301,9 @@ class EditPostActivity : AppCompatActivity() {
     private suspend fun uploadImages(productId: Int) {
         try {
             photoList.forEach { uri ->
+                val scheme = uri.scheme?.lowercase()
+                if (scheme != "content" && scheme != "file") return@forEach
+
                 // Для content:// URI используем InputStream
                 val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
                 val bytes = inputStream.readBytes()

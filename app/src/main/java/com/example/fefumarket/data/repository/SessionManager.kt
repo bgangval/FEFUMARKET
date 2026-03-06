@@ -50,7 +50,10 @@ class SessionManager(context: Context) {
 
     // Выход: сохраняем данные, но сбрасываем email
     fun clear() {
-        prefs.edit().remove("USER_EMAIL").apply()
+        prefs.edit()
+            .remove("USER_EMAIL")
+            .remove("AUTH_TOKEN")
+            .apply()
     }
 
     // Полное удаление всех данных профиля

@@ -10,6 +10,16 @@ class ChatRepository(
     private val api: ApiService,
     private val session: SessionManager
 ) {
+    private var currentUserIdCache: Int? = null
+
+    // Получение ID текущего пользователя (кэшируется)
+    suspend fun getCurrentUserId(): Int {
+        session.getToken() ?: throw Exception("Not authenticated")
+        if (currentUserIdCache == null) {
+            currentUserIdCache = api.getMe().id
+        }
+        return currentUserIdCache!!
+    }
 
     // Получение или создание чата для продукта
     suspend fun getOrCreateChat(productId: Int): ChatOut {

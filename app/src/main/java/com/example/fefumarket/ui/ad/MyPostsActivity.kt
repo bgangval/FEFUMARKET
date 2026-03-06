@@ -2,7 +2,6 @@ package com.example.fefumarket.ui.ad
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fefumarket.R
@@ -17,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.widget.Toast
 
 // Экран "Мои объявления"
 // Отображает все объявления текущего пользователя в виде сетки
@@ -27,7 +27,6 @@ class MyPostsActivity : BaseActivity() {
     private lateinit var adapter: MyPostsAdapter
     private lateinit var btnAddPost: MaterialButton
 
-    private lateinit var currentUser: String
     private lateinit var adRepository: AdRepository
     private lateinit var sessionManager: SessionManager
 
@@ -40,7 +39,6 @@ class MyPostsActivity : BaseActivity() {
 
         // 🔹 Получаем данные о текущем пользователе
         sessionManager = SessionManager(this)
-        currentUser = sessionManager.getUserName() ?: ""
 
         // 🔹 Инициализация репозитория с session
         val api = RetrofitClient.create(this)
@@ -69,20 +67,30 @@ class MyPostsActivity : BaseActivity() {
     // 🔹 Загрузка объявлений текущего пользователя через AdRepository
     private fun loadMyAds() {
         CoroutineScope(Dispatchers.IO).launch {
-            val allAds = adRepository.getAds() // получаем все объявления
-            val myAds = allAds.filter { it.seller == currentUser }.toMutableList() // фильтруем по текущему пользователю
+            try {
+                val myAds = adRepository.getMyAds().toMutableList()
 
-            withContext(Dispatchers.Main) {
-                if (::adapter.isInitialized) {
-                    adapter.updateList(myAds)
-                } else {
-                    // Инициализация адаптера с обработчиком клика для редактирования
-                    adapter = MyPostsAdapter(myAds) { ad ->
-                        val intent = Intent(this@MyPostsActivity, EditPostActivity::class.java)
-                        intent.putExtra("AD_TITLE", ad.title)
-                        startActivity(intent)
+                withContext(Dispatchers.Main) {
+                    if (::adapter.isInitialized) {
+                        adapter.updateList(myAds)
+                    } else {
+                        // Инициализация адаптера с обработчиком клика для редактирования
+                        adapter = MyPostsAdapter(myAds) { ad ->
+                            val intent = Intent(this@MyPostsActivity, EditPostActivity::class.java)
+                            intent.putExtra("AD_ID", ad.id)
+                            intent.putExtra("AD_TITLE", ad.title)
+                            startActivity(intent)
+                        }
+                        recyclerView.adapter = adapter
                     }
-                    recyclerView.adapter = adapter
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MyPostsActivity,
+                        "Ошибка загрузки моих объявлений: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }

@@ -84,7 +84,7 @@ class HomeActivity : BaseActivity() {
 
         // 🔹 Проверка авторизации пользователя
         session = SessionManager(this)
-        if (session.getLogin() == null) {
+        if (session.getLogin() == null || session.getToken().isNullOrBlank()) {
             startActivity(Intent(this, LoginActivity::class.java)) // Переход на экран логина
             finish()
             return

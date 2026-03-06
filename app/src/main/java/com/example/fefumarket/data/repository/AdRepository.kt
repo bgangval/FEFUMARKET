@@ -113,21 +113,20 @@ class AdRepository(
     }
 
     // Получение только моих объявлений (фильтруем на клиенте)
-    suspend fun getMyAds(userName: String? = null): List<Ad> {
+    suspend fun getMyAds(): List<Ad> {
         session.getToken() ?: throw Exception("Not authenticated")
         
         // Получаем текущего пользователя
         val user = getCurrentUser()
-        val myUserId = user.id
-        
-        // Загружаем все объявления и фильтруем по owner_id
-        val allAds = getAds()
-        return allAds.filter { ad ->
-            val adId = ad.id.toIntOrNull()
-            // Проверяем по owner_id из кэша (нужно сохранять owner_id в модели Ad)
-            // Пока используем фильтрацию по имени продавца
-            ad.seller == userName || ad.seller == user.name
-        }
+
+        // Загружаем объявления с сервера и фильтруем по owner_id текущего пользователя
+        val myAds = api.getProducts().items
+            .filter { product -> product.owner_id == user.id }
+            .map { product -> product.toAd(sellerName = user.name) }
+
+        adsCache.clear()
+        adsCache.addAll(myAds)
+        return myAds
     }
 
     // ===== FAVORITES =====

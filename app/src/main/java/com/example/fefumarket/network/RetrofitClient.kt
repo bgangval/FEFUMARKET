@@ -10,7 +10,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 // Retrofit-клиент для работы с backend FEFUMarket
 object RetrofitClient {
 
-    private const val BASE_URL = "http://10.0.2.2:8000/" // localhost для Android Emulator
+    const val BASE_URL = "http://10.0.2.2:8000/" // localhost для Android Emulator
+
+    fun resolveUrl(pathOrUrl: String?): String? {
+        if (pathOrUrl.isNullOrBlank()) return null
+        if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+            return pathOrUrl
+        }
+        val normalizedPath = if (pathOrUrl.startsWith("/")) pathOrUrl else "/$pathOrUrl"
+        return BASE_URL.removeSuffix("/") + normalizedPath
+    }
 
     fun create(context: Context): ApiService {
         val sessionManager = SessionManager(context)

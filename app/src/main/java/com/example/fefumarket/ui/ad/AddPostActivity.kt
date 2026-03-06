@@ -205,6 +205,9 @@ class AddPostActivity : AppCompatActivity() {
     private suspend fun uploadImages(productId: Int) {
         try {
             photoList.forEach { uri ->
+                val scheme = uri.scheme?.lowercase()
+                if (scheme != "content" && scheme != "file") return@forEach
+
                 // Для content:// URI используем InputStream
                 val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
                 val bytes = inputStream.readBytes()

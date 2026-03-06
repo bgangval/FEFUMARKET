@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.fefumarket.R
 import com.example.fefumarket.data.models.Ad
-import com.example.fefumarket.data.repository.FavoritesManager
 import com.example.fefumarket.ui.ad.AdDetailActivity
 
 class FavoriteAdapter(
-    val items: MutableList<Ad>
+    val items: MutableList<Ad>,
+    private val onRemoveFavorite: (Ad) -> Unit
 ) : RecyclerView.Adapter<FavoriteAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -51,8 +51,7 @@ class FavoriteAdapter(
 
         // 🔹 Логика удаления из избранного
         holder.btnRemoveFavorite.setOnClickListener {
-            FavoritesManager.remove(item) // удаляем из глобального списка избранного
-            removeItem(position)          // удаляем из текущего RecyclerView
+            onRemoveFavorite(item)
         }
 
         // 🔹 Логика перехода на страницу с деталями объявления
@@ -66,8 +65,15 @@ class FavoriteAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    private fun removeItem(position: Int) {
+    fun removeItem(position: Int) {
+        if (position !in items.indices) return
         items.removeAt(position)
         notifyItemRemoved(position)
+    }
+
+    fun removeItemById(adId: String) {
+        val position = items.indexOfFirst { it.id == adId }
+        if (position == -1) return
+        removeItem(position)
     }
 }

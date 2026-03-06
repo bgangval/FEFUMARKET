@@ -1,6 +1,7 @@
 package com.example.fefumarket.data.models.api
 
 import com.example.fefumarket.data.models.Ad
+import com.example.fefumarket.network.RetrofitClient
 
 // Преобразование ProductOut в модель Ad для использования в приложении
 fun ProductOut.toAd(
@@ -15,7 +16,9 @@ fun ProductOut.toAd(
         description = description ?: "",
         category = category,
         condition = condition,
-        imageUris = emptyList(), // Изображения загружаются отдельно через /products/{id}/images
+        imageUris = images.mapNotNull { image ->
+            RetrofitClient.resolveUrl(image.image_url)
+        },
         isSold = false
     )
 }
