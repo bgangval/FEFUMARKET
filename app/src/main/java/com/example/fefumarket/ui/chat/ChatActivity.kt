@@ -59,12 +59,7 @@ class ChatActivity : BaseActivity() {
                 chats.clear()
                 // Преобразуем ChatOut в ChatItem
                 chatOuts.forEach { chatOut ->
-                    // Здесь нужно получить информацию о продукте и продавце
-                    // Пока используем базовый маппинг
-                    val chatItem = chatOut.toChatItem(
-                        sellerName = "Продавец ${chatOut.seller_id}",
-                        productName = "Товар ${chatOut.product_id}"
-                    )
+                    val chatItem = chatOut.toChatItem()
                     chats.add(chatItem)
                 }
                 adapter.notifyDataSetChanged()

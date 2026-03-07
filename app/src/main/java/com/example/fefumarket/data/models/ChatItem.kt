@@ -7,5 +7,6 @@ data class ChatItem(
     val productName: String,
     var lastMessage: String,
     val avatarUri: String,
-    var isMuted: Boolean = false
+    var isMuted: Boolean = false,
+    val apiChatId: Int? = null
 )

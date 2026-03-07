@@ -7,18 +7,17 @@ import com.example.fefumarket.network.RetrofitClient
 fun ProductOut.toAd(
     sellerName: String = "Продавец"
 ): Ad {
+    val resolvedSeller = extractOwnerName() ?: sellerName
     return Ad(
         id = id.toString(),
         title = title,
         price = "₽${price.toInt()}",
         dorm = building,
-        seller = sellerName,
+        seller = resolvedSeller,
         description = description ?: "",
         category = category,
         condition = condition,
-        imageUris = images.mapNotNull { image ->
-            RetrofitClient.resolveUrl(image.image_url)
-        },
+        imageUris = extractImageUrls().mapNotNull { url -> RetrofitClient.resolveUrl(url) },
         isSold = false
     )
 }
@@ -67,4 +66,28 @@ fun AdResponse.toAd(
         imageUris = emptyList(),
         isSold = false
     )
+}
+
+private fun ProductOut.extractOwnerName(): String? {
+    return runCatching {
+        val field = javaClass.getDeclaredField("owner_name")
+        field.isAccessible = true
+        (field.get(this) as? String)?.takeIf { it.isNotBlank() }
+    }.getOrNull()
+}
+
+private fun ProductOut.extractImageUrls(): List<String> {
+    return runCatching {
+        val imagesField = javaClass.getDeclaredField("images")
+        imagesField.isAccessible = true
+        val imagesValue = imagesField.get(this) as? List<*> ?: return emptyList()
+
+        imagesValue.mapNotNull { imageObj ->
+            runCatching {
+                val imageUrlField = imageObj?.javaClass?.getDeclaredField("image_url")
+                imageUrlField?.isAccessible = true
+                imageUrlField?.get(imageObj) as? String
+            }.getOrNull()
+        }
+    }.getOrElse { emptyList() }
 }

@@ -4,8 +4,11 @@ package com.example.fefumarket.data.models.api
 data class ChatOut(
     val id: Int,
     val product_id: Int,
+    val product_title: String? = null,
     val buyer_id: Int,
+    val buyer_name: String? = null,
     val seller_id: Int,
+    val seller_name: String? = null,
     val created_at: String,
     val messages: List<MessageOut> = emptyList()
 )

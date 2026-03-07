@@ -53,7 +53,8 @@ class ChatAdapter(val chats: MutableList<ChatItem>) :
         holder.itemView.setOnClickListener {
             val context = it.context
             val intent = Intent(context, MessageActivity::class.java).apply {
-                putExtra("CHAT_ID", "${chat.sellerName}_${chat.productName}")
+                putExtra("CHAT_ID", chat.apiChatId?.toString() ?: "${chat.sellerName}_${chat.productName}")
+                chat.apiChatId?.let { id -> putExtra("API_CHAT_ID", id) }
                 putExtra("SELLER_NAME", chat.sellerName)
                 putExtra("PRODUCT_NAME", chat.productName)
                 putExtra("AVATAR_URI", chat.avatarUri)

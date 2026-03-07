@@ -4,14 +4,15 @@ import com.example.fefumarket.data.models.ChatItem
 import com.example.fefumarket.data.models.MessageItem
 
 // Преобразование ChatOut в ChatItem для использования в UI
-fun ChatOut.toChatItem(sellerName: String = "Продавец", productName: String = "Товар"): ChatItem {
+fun ChatOut.toChatItem(): ChatItem {
     val lastMsg = messages.lastOrNull()?.text ?: ""
     return ChatItem(
-        sellerName = sellerName,
-        productName = productName,
+        sellerName = seller_name?.takeIf { it.isNotBlank() } ?: "Продавец",
+        productName = product_title?.takeIf { it.isNotBlank() } ?: "Товар",
         lastMessage = lastMsg,
         avatarUri = "",
-        isMuted = false
+        isMuted = false,
+        apiChatId = id
     )
 }
 
