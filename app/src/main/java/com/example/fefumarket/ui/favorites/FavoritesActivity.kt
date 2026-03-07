@@ -34,7 +34,22 @@ class FavoritesActivity : BaseActivity() {
         adRepository = AdRepository(api, sessionManager)
 
         // 🔹 Настраиваем адаптер для RecyclerView с пустым списком, будет обновляться при onResume
-        adapter = FavoriteAdapter(mutableListOf())
+        adapter = FavoriteAdapter(mutableListOf()) { ad ->
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    ad.id.toIntOrNull()?.let { productId ->
+                        adRepository.removeFavorite(productId)
+                    }
+                } catch (_: Exception) {
+                    // Если сервер недоступен, все равно удаляем локально как fallback
+                }
+
+                withContext(Dispatchers.Main) {
+                    FavoritesManager.remove(ad)
+                    adapter.removeItemById(ad.id)
+                }
+            }
+        }
         recyclerView.adapter = adapter
     }
 

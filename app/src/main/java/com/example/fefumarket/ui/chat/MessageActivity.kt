@@ -34,6 +34,7 @@ class MessageActivity : AppCompatActivity() {
     private lateinit var chatRepository: ChatRepository
     private lateinit var sessionManager: SessionManager
     private val messages = mutableListOf<MessageItem>()
+    private var currentUserId: Int = -1
 
     private fun hideKeyboard(editText: EditText) {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
@@ -59,11 +60,6 @@ class MessageActivity : AppCompatActivity() {
         // 🔹 Получаем или создаём чат через MessagesManager (локальный кэш)
         chat = MessagesManager.getOrCreateChat(chatId, sellerName, productName, avatarUri)
 
-        // 🔹 Загружаем сообщения с сервера, если есть API chat ID
-        if (apiChatId != null) {
-            loadMessages(apiChatId!!)
-        }
-
         // Заголовок чата
         findViewById<TextView>(R.id.chatTitle).text = sellerName
         findViewById<TextView>(R.id.chatSubtitle).text = productName
@@ -80,6 +76,11 @@ class MessageActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
+        // 🔹 Загружаем сообщения с сервера, если есть API chat ID
+        if (apiChatId != null) {
+            loadMessages(apiChatId!!)
+        }
+
         // 🔹 Отправка нового сообщения через API
         sendButton.setOnClickListener {
             val text = inputMessage.text.toString().trim()
@@ -89,12 +90,7 @@ class MessageActivity : AppCompatActivity() {
                     lifecycleScope.launch {
                         try {
                             val messageOut = chatRepository.sendMessage(apiChatId!!, text)
-                            val currentUserId = sessionManager.getLogin()?.let { 
-                                // Здесь нужно получить ID текущего пользователя
-                                // Пока используем простую проверку
-                                0 // Заглушка
-                            } ?: 0
-                            val messageItem = messageOut.toMessageItem(currentUserId)
+                            val messageItem = messageOut.toMessageItem(resolveCurrentUserId())
                             messages.add(messageItem)
                             adapter.notifyItemInserted(messages.size - 1)
                             recyclerView.scrollToPosition(messages.size - 1)
@@ -156,11 +152,7 @@ class MessageActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val chatOut = chatRepository.getChat(chatId)
-                val currentUserId = sessionManager.getLogin()?.let { 
-                    // Здесь нужно получить ID текущего пользователя
-                    // Пока используем простую проверку
-                    0 // Заглушка
-                } ?: 0
+                val currentUserId = resolveCurrentUserId()
                 
                 messages.clear()
                 chatOut.messages.forEach { messageOut ->
@@ -179,5 +171,15 @@ class MessageActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private suspend fun resolveCurrentUserId(): Int {
+        if (currentUserId != -1) return currentUserId
+        currentUserId = try {
+            chatRepository.getCurrentUserId()
+        } catch (_: Exception) {
+            0
+        }
+        return currentUserId
     }
 }

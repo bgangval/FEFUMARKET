@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 class AdDetailActivity : AppCompatActivity() {
 
     private lateinit var ad: Ad
+    private var adIdForRefresh: String? = null
     private lateinit var photoPager: ViewPager2
     private lateinit var adTitle: TextView
     private lateinit var adPrice: TextView
@@ -74,6 +75,7 @@ class AdDetailActivity : AppCompatActivity() {
         val adIdFromIntent = intent.getStringExtra("AD_ID")
         val adIdFromDeepLink = intent?.data?.lastPathSegment
         val resolvedId = adIdFromIntent ?: adIdFromDeepLink
+        adIdForRefresh = resolvedId
 
         if (resolvedId == null) {
             Toast.makeText(this, "Ошибка загрузки объявления", Toast.LENGTH_SHORT).show()
@@ -111,6 +113,7 @@ class AdDetailActivity : AppCompatActivity() {
 
         // btnFavoriteTop / btnFavorite — добавление/удаление объявления из избранного через API
         btnFavoriteTop.setOnClickListener {
+            if (!ensureAdLoaded()) return@setOnClickListener
             lifecycleScope.launch {
                 try {
                     val productId = ad.id.toIntOrNull() 
@@ -135,6 +138,7 @@ class AdDetailActivity : AppCompatActivity() {
             }
         }
         btnFavorite.setOnClickListener {
+            if (!ensureAdLoaded()) return@setOnClickListener
             lifecycleScope.launch {
                 try {
                     val productId = ad.id.toIntOrNull() 
@@ -160,17 +164,26 @@ class AdDetailActivity : AppCompatActivity() {
         }
 
         // btnChat — открытие чата через MessagesManager
-        btnChat.setOnClickListener { openChat() }
+        btnChat.setOnClickListener {
+            if (!ensureAdLoaded()) return@setOnClickListener
+            openChat()
+        }
 
         // btnShareTop — создание deep link и вызов стандартного Share Intent
-        btnShareTop.setOnClickListener { shareAd() }
+        btnShareTop.setOnClickListener {
+            if (!ensureAdLoaded()) return@setOnClickListener
+            shareAd()
+        }
     }
 
     // ---------- Обновление объявления при возврате на экран ----------
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
-            val updatedAd = adRepository.getAdById(ad.id) // проверяем актуальность объявления
+            val id = if (::ad.isInitialized) ad.id else adIdForRefresh
+            if (id.isNullOrBlank()) return@launch
+
+            val updatedAd = adRepository.getAdById(id) // проверяем актуальность объявления
             if (updatedAd != null) {
                 ad = updatedAd
                 updateUI()
@@ -179,6 +192,12 @@ class AdDetailActivity : AppCompatActivity() {
     }
 
     // ---------- Вспомогательные методы ----------
+
+    private fun ensureAdLoaded(): Boolean {
+        if (::ad.isInitialized) return true
+        Toast.makeText(this, "Объявление еще загружается", Toast.LENGTH_SHORT).show()
+        return false
+    }
 
     // Обновление UI элементов с данными объявления
     private fun updateUI() {

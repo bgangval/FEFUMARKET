@@ -81,9 +81,6 @@ class AddPostActivity : AppCompatActivity() {
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
         categoryRepository = CategoryRepository(api, sessionManager)
-        
-        // Загружаем категории с сервера
-        loadCategories()
 
         photoPager = findViewById(R.id.photoPager)
         btnAddPhoto = findViewById(R.id.btnAddPhoto)
@@ -106,8 +103,15 @@ class AddPostActivity : AppCompatActivity() {
         }
 
         spinnerDorm.adapter = whiteTextAdapter(dorms)
-        spinnerCategory.adapter = whiteTextAdapter(categories)
         spinnerCondition.adapter = whiteTextAdapter(conditions)
+
+        // Чтобы spinner не был пустым даже при пустых/недоступных категориях на сервере
+        categories.clear()
+        categories.addAll(defaultCategories())
+        spinnerCategory.adapter = whiteTextAdapter(categories)
+
+        // Загружаем категории с сервера
+        loadCategories()
 
         btnSave.setOnClickListener { saveAd() }
     }
@@ -118,7 +122,11 @@ class AddPostActivity : AppCompatActivity() {
             try {
                 val serverCategories = categoryRepository.getCategories()
                 categories.clear()
-                categories.addAll(serverCategories.map { it.name })
+                if (serverCategories.isEmpty()) {
+                    categories.addAll(defaultCategories())
+                } else {
+                    categories.addAll(serverCategories.map { it.name })
+                }
                 
                 withContext(Dispatchers.Main) {
                     spinnerCategory.adapter = whiteTextAdapter(categories)
@@ -127,14 +135,18 @@ class AddPostActivity : AppCompatActivity() {
                 // Fallback на локальные категории
                 withContext(Dispatchers.Main) {
                     categories.clear()
-                    categories.addAll(listOf(
-                        "Одежда", "Обувь", "Техника", "Бьюти",
-                        "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
-                    ))
+                    categories.addAll(defaultCategories())
                     spinnerCategory.adapter = whiteTextAdapter(categories)
                 }
             }
         }
+    }
+
+    private fun defaultCategories(): List<String> {
+        return listOf(
+            "Одежда", "Обувь", "Техника", "Бьюти",
+            "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
+        )
     }
 
     // Формирование модели объявления и передача её в репозиторий
@@ -205,6 +217,9 @@ class AddPostActivity : AppCompatActivity() {
     private suspend fun uploadImages(productId: Int) {
         try {
             photoList.forEach { uri ->
+                val scheme = uri.scheme?.lowercase()
+                if (scheme != "content" && scheme != "file") return@forEach
+
                 // Для content:// URI используем InputStream
                 val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
                 val bytes = inputStream.readBytes()

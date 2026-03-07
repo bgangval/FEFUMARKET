@@ -10,5 +10,6 @@ data class ProductOut(
     val building: String,
     val description: String?,
     val owner_id: Int,
-    val created_at: String
+    val created_at: String,
+    val images: List<ProductImageOut> = emptyList()
 )

@@ -159,12 +159,13 @@ class ProfileActivity : BaseActivity() {
                 
                 // Загружаем аватар с сервера, если есть
                 user.avatar_url?.let { avatarUrl ->
+                    val resolvedAvatarUrl = RetrofitClient.resolveUrl(avatarUrl) ?: avatarUrl
                     Glide.with(this@ProfileActivity)
-                        .load(avatarUrl)
+                        .load(resolvedAvatarUrl)
                         .circleCrop()
                         .placeholder(R.drawable.ic_user)
                         .into(profileImage)
-                    session.saveImagePath(avatarUrl)
+                    session.saveImagePath(resolvedAvatarUrl)
                 } ?: run {
                     // Если аватара нет на сервере, пробуем загрузить локальный
                     session.getImagePath()?.let {

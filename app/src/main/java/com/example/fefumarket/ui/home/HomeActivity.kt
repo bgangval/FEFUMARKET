@@ -84,7 +84,7 @@ class HomeActivity : BaseActivity() {
 
         // 🔹 Проверка авторизации пользователя
         session = SessionManager(this)
-        if (session.getLogin() == null) {
+        if (session.getLogin() == null || session.getToken().isNullOrBlank()) {
             startActivity(Intent(this, LoginActivity::class.java)) // Переход на экран логина
             finish()
             return
@@ -196,7 +196,8 @@ class HomeActivity : BaseActivity() {
                 val ads = adRepository.getAds()
                 currentAds.clear()
                 currentAds.addAll(ads)
-                adAdapter.updateAds(currentAds) // обновление RecyclerView
+                val searchView = findViewById<SearchView>(R.id.searchView)
+                performSearch(searchView.query?.toString().orEmpty())
                 Log.d("HOME_ADS", "Ads loaded: ${ads.size}")
             } catch (e: Exception) {
                 Log.d("HOME_ADS", "Ошибка: ${e.message}")
@@ -275,9 +276,8 @@ class HomeActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         setActiveNavItem(R.id.nav_home)
-        val searchView = findViewById<SearchView>(R.id.searchView)
-        performSearch(searchView.query.toString())
-        adAdapter.updateAds(currentAds)
+        // После добавления/редактирования объявлений обновляем список с сервера
+        loadAdsFromServer()
     }
 
     override fun onDestroy() {

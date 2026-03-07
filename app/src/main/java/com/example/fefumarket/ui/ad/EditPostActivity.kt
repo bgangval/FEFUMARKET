@@ -79,9 +79,6 @@ class EditPostActivity : AppCompatActivity() {
         val api = RetrofitClient.create(this)
         adRepository = AdRepository(api, sessionManager)
         val categoryRepository = CategoryRepository(api, sessionManager)
-        
-        // Загружаем категории с сервера
-        loadCategories(categoryRepository)
 
         // ---------- Инициализация UI ----------
         photoPager = findViewById(R.id.photoPager)
@@ -96,14 +93,27 @@ class EditPostActivity : AppCompatActivity() {
         btnSold = findViewById(R.id.btnSold)
         findViewById<ImageButton>(R.id.btnBack)?.setOnClickListener { finish() }
 
+        // Чтобы spinner не был пустым, пока категории грузятся с сервера
+        categories.clear()
+        categories.addAll(defaultCategories())
+        spinnerCategory.adapter = whiteTextAdapter(categories)
+
+        // Загружаем категории с сервера
+        loadCategories(categoryRepository)
+
         btnAddPhoto.setOnClickListener { pickImagesLauncher.launch("image/*") }
         btnSave.setOnClickListener { saveChanges() }
         btnSold.setOnClickListener { markAsSold() }
 
-        // 🔹 Загружаем объявление по title через AdRepository
+        // 🔹 Загружаем объявление по ID (основной путь), fallback — по title
+        val adId = intent.getStringExtra("AD_ID")
         val adTitle = intent.getStringExtra("AD_TITLE") ?: ""
         CoroutineScope(Dispatchers.IO).launch {
-            val foundAd = adRepository.findByTitle(adTitle)
+            val foundAd = when {
+                !adId.isNullOrBlank() -> adRepository.getAdById(adId)
+                adTitle.isNotBlank() -> adRepository.findByTitle(adTitle)
+                else -> null
+            }
             if (foundAd == null) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@EditPostActivity, "Объявление не найдено", Toast.LENGTH_SHORT).show()
@@ -267,7 +277,11 @@ class EditPostActivity : AppCompatActivity() {
             try {
                 val serverCategories = categoryRepository.getCategories()
                 categories.clear()
-                categories.addAll(serverCategories.map { it.name })
+                if (serverCategories.isEmpty()) {
+                    categories.addAll(defaultCategories())
+                } else {
+                    categories.addAll(serverCategories.map { it.name })
+                }
                 
                 withContext(Dispatchers.Main) {
                     spinnerCategory.adapter = whiteTextAdapter(categories)
@@ -280,9 +294,7 @@ class EditPostActivity : AppCompatActivity() {
                 // Fallback на локальные категории
                 withContext(Dispatchers.Main) {
                     categories.clear()
-                    categories.addAll(listOf(
-                        "Одежда", "Обувь", "Техника", "Бьюти", "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
-                    ))
+                    categories.addAll(defaultCategories())
                     spinnerCategory.adapter = whiteTextAdapter(categories)
                     if (::ad.isInitialized) {
                         spinnerCategory.setSelection(categories.indexOf(ad.category).coerceAtLeast(0))
@@ -292,10 +304,19 @@ class EditPostActivity : AppCompatActivity() {
         }
     }
 
+    private fun defaultCategories(): List<String> {
+        return listOf(
+            "Одежда", "Обувь", "Техника", "Бьюти", "Еда", "Для учебы", "Мебель", "Барахло", "Другое"
+        )
+    }
+
     // 🔹 Загрузка изображений на сервер
     private suspend fun uploadImages(productId: Int) {
         try {
             photoList.forEach { uri ->
+                val scheme = uri.scheme?.lowercase()
+                if (scheme != "content" && scheme != "file") return@forEach
+
                 // Для content:// URI используем InputStream
                 val inputStream = contentResolver.openInputStream(uri) ?: return@forEach
                 val bytes = inputStream.readBytes()

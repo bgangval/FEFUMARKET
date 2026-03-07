@@ -27,8 +27,8 @@ class LoginActivity : AppCompatActivity() {
 
         session = SessionManager(this)
 
-        // 🔹 Если пользователь уже залогинен, переходим сразу на HomeActivity
-        session.getLogin()?.let {
+        // 🔹 Если пользователь уже залогинен и есть токен, переходим сразу на HomeActivity
+        if (session.getLogin() != null && !session.getToken().isNullOrBlank()) {
             val intent = Intent(this, HomeActivity::class.java)
             startActivity(intent)
             finish()

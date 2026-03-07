@@ -2,8 +2,12 @@ package com.example.fefumarket.ui.home
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -35,7 +39,8 @@ class FiltersActivity : AppCompatActivity() {
         "Еда",
         "Для учебы",
         "Мебель",
-        "Барахло"
+        "Барахло",
+        "Другое"
     )
 
     private val conditions = listOf("Новое", "Б/у", "Любое")
@@ -147,9 +152,22 @@ class FiltersActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this, R.style.Theme_FEFUMARKET_Dialog)
         builder.setTitle(title)
 
-        builder.setMultiChoiceItems(items.toTypedArray(), selectedItems.toBooleanArray()) { _, which, isChecked ->
-            selectedItems[which] = isChecked
+        val adapter = object : ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_multiple_choice,
+            items
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent)
+                (view.findViewById<TextView>(android.R.id.text1)).apply {
+                    setTextColor(resources.getColor(android.R.color.white, null))
+                    textSize = 16f
+                }
+                view.setBackgroundColor(resources.getColor(R.color.bg, null))
+                return view
+            }
         }
+        builder.setAdapter(adapter, null)
 
         builder.setPositiveButton("Применить") { dialog, _ ->
             val selected = items.filterIndexed { index, _ -> selectedItems[index] }
@@ -169,12 +187,13 @@ class FiltersActivity : AppCompatActivity() {
         dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(resources.getColor(android.R.color.white, null))
 
         val listView = dialog.listView
-        for (i in 0 until listView.count) {
-            val item = listView.getChildAt(i)
-            item?.let {
-                val textView = it.findViewById<TextView>(android.R.id.text1)
-                textView?.setTextColor(resources.getColor(android.R.color.white, null))
-            }
+        listView.choiceMode = ListView.CHOICE_MODE_MULTIPLE
+        listView.setBackgroundColor(resources.getColor(R.color.bg, null))
+        selectedItems.forEachIndexed { index, isChecked ->
+            listView.setItemChecked(index, isChecked)
+        }
+        listView.setOnItemClickListener { _, _, which, _ ->
+            selectedItems[which] = listView.isItemChecked(which)
         }
     }
 }
